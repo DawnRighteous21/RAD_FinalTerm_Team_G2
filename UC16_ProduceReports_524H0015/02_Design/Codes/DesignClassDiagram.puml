@@ -1,0 +1,90 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+title 3.6.2 Design Class Diagram (All Layers) - UC6 (Author: 524H0015)
+
+package "UI (View) Layer" {
+    class ManagementReportView {
+        - selectedReportType: String
+        - startDate: Date
+        - endDate: Date
+        - selectedHubId: String
+        - selectedBrandId: String
+        + openDashboardClick(): void
+        + generateReportClick(type: String, start: Date, end: Date, hubId: String, brandId: String): void
+        + exportOrArchiveClick(reportId: String, actionFormat: String): void
+        + renderReportCharts(report: ManagementReport): void
+    }
+}
+
+package "Controller Layer" {
+    class ReportingController {
+        + getFilterOptions(): Map<String, List>
+        + generateReport(type: String, start: Date, end: Date, hubId: String, brandId: String): ManagementReport
+        + exportOrArchiveReport(reportId: String, actionFormat: String): String
+    }
+}
+
+package "Domain Layer" {
+    class ManagementReport {
+        - reportId: String
+        - reportType: String
+        - startDate: Date
+        - endDate: Date
+        - generatedAt: DateTime
+        - totalRevenue: Decimal
+        - totalOrders: Integer
+        - avgDeliveryTimeMins: Decimal
+        - peakHubUtilizationPct: Decimal
+        - status: String
+        + validateDateRange(): Boolean
+        + computeKPIs(orders: List<Order>, hubs: List<Hub>): void
+        + markExported(format: String): String
+        + markArchived(): void
+    }
+
+    class Order {
+        - orderId: String
+        - orderStatus: String
+        - totalAmount: Decimal
+        - prepStartedAt: DateTime
+        - deliveredAt: DateTime
+        + getTotalFulfilmentMins(): Decimal
+    }
+
+    class Hub {
+        - hubId: String
+        - hubName: String
+        - maxActiveOrders: Integer
+        - currentActiveOrders: Integer
+        + getUtilizationPercentage(): Decimal
+    }
+}
+
+package "Data Access Layer" {
+    class OrderAnalyticsDAO {
+        + findOrdersByCriteria(start: Date, end: Date, hubId: String, brandId: String): List<Order>
+    }
+
+    class HubDAO {
+        + findAllHubs(): List<Hub>
+    }
+
+    class ReportDAO {
+        + saveReportSnapshot(report: ManagementReport): Boolean
+        + findById(reportId: String): ManagementReport
+        + updateReportStatus(reportId: String, status: String): Boolean
+    }
+}
+
+Hub "1..*" -- "0..*" ManagementReport : summarized in >
+Order "0..*" -- "0..*" ManagementReport : aggregated in >
+
+ManagementReportView ..> ReportingController
+ReportingController ..> ManagementReport
+ReportingController ..> Order
+ReportingController ..> Hub
+ReportingController ..> OrderAnalyticsDAO
+ReportingController ..> HubDAO
+ReportingController ..> ReportDAO
+@enduml

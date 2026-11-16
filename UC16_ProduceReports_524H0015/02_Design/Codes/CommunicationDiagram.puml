@@ -1,0 +1,19 @@
+@startuml
+skinparam shadowing false
+skinparam objectBackgroundColor White
+skinparam objectBorderColor Black
+title 3.6.3 Communication Diagram - UC6 (Author: 524H0015)
+
+object ":ManagementReportView" as View
+object ":ReportingController" as Ctrl
+object ":HubDAO" as HDAO
+object ":OrderAnalyticsDAO" as OADAO
+object "rpt:ManagementReport" as Rpt
+object ":ReportDAO" as RDAO
+
+View --> Ctrl : 1: getFilterOptions()\n2: generateReport()\n3: exportOrArchiveReport()
+Ctrl --> HDAO : 1.1: findAllHubs()\n2.3: findAllHubs()
+Ctrl --> Rpt : 2.1: <<create>>\n2.4: computeKPIs()\n3.2: markExported()
+Ctrl --> OADAO : 2.2: findOrdersByCriteria()
+Ctrl --> RDAO : 2.5: saveReportSnapshot()\n3.1: findById()\n3.3: updateReportStatus()
+@enduml
