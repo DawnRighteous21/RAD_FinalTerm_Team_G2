@@ -1,0 +1,57 @@
+@startuml
+skinparam style strictuml
+skinparam defaultTextAlignment center
+
+|Customer|
+start
+:Browse Menus;
+:Place Order;
+
+|System|
+if (Hub OK?) then (No (Busy))
+    :Cancel & Notify;
+    |Customer|
+    stop
+else (Yes)
+    |Kitchen Staff|
+    :Review Order;
+    if (Accept?) then (No (Reject))
+        |System|
+        :Cancel & Notify;
+        |Customer|
+        stop
+    else (Yes)
+        |Kitchen Staff|
+        :Prepare Food;
+        :Mark Ready;
+        
+        |System|
+        :Alert Shipper;
+        
+        |Shipper|
+        :Pick Up Order;
+        :Deliver Order;
+        
+        |Customer|
+        :Receive Order;
+        
+        if (Customer Action?) then (Complain)
+            :Submit Complaint;
+            |System|
+            :Route to Office;
+            |Office Staff|
+            :Review Complaint;
+            :Process Refund;
+            |Customer|
+            stop
+        else (Rate)
+            |Customer|
+            :Rate Order;
+            |System|
+            :Log Rating;
+            |Customer|
+            stop
+        endif
+    endif
+endif
+@enduml

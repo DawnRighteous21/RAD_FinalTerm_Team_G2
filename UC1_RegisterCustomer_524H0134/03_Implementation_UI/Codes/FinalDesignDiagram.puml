@@ -1,0 +1,93 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+title 3.1.5 Final Design Class Diagram with Navigation Arrows - UC1 (Author: 524H0134)
+
+class RegistrationAddressView {
+    - selectedAccountType: String
+    + displayRegistrationForm(accountType: String): void
+    + submitRegistration(type: String, name: String, email: String, idStr: String, extra: String): void
+    + submitAddress(customerId: String, street: String, district: String, landmark: String): void
+    + updateOrDeleteAddress(customerId: String, addressId: String, action: String, details: Map): void
+}
+
+class CustomerRegistrationController {
+    - customerDAO: CustomerDAO
+    - addressDAO: DeliveryAddressDAO
+    - hubDAO: HubDAO
+    + selectAccountType(accountType: String): List<String>
+    + registerCustomer(type: String, name: String, email: String, idStr: String, extra: String): String
+    + addDeliveryAddress(customerId: String, street: String, district: String, landmark: String): DeliveryAddress
+    + updateOrArchiveAddress(customerId: String, addressId: String, action: String, details: Map): Boolean
+}
+
+abstract class Customer {
+    # customerId: String
+    # fullName: String
+    # email: String
+    # status: String
+    # createdAt: DateTime
+    + validateCredentials(): Boolean
+    + activateProfile(): void
+    + addAddress(addr: DeliveryAddress): void
+}
+
+class LocalCustomer {
+    - vnPhoneNumber: String
+    - preferredLocalWallet: String
+    + validateCredentials(): Boolean
+}
+
+class ForeignTourist {
+    - passportNumber: String
+    - nationality: String
+    - hotelName: String
+    - roomNumber: String
+    + validateCredentials(): Boolean
+}
+
+class DeliveryAddress {
+    - addressId: String
+    - streetAddress: String
+    - district: String
+    - landmarkOrHotel: String
+    - distanceKmFromHub: Decimal
+    - isDefault: Boolean
+    - status: String
+    + verifyRange(maxDistKm: Decimal): Boolean
+    + markArchived(): void
+}
+
+class Hub {
+    - hubId: String
+    - district: String
+    - maxDeliveryDistanceKm: Decimal
+    + calculateDistanceTo(street: String, district: String): Decimal
+}
+
+class CustomerDAO {
+    + existsByPhoneOrPassport(idStr: String): Boolean
+    + insertCustomer(cust: Customer): Boolean
+}
+
+class DeliveryAddressDAO {
+    + insertAddress(customerId: String, addr: DeliveryAddress): Boolean
+    + archiveAddress(addressId: String): Boolean
+}
+
+class HubDAO {
+    + findNearestHub(district: String): Hub
+}
+
+RegistrationAddressView "1" --> "1" CustomerRegistrationController : invokes >
+CustomerRegistrationController "1" --> "1" CustomerDAO : queries/persists >
+CustomerRegistrationController "1" --> "1" DeliveryAddressDAO : persists >
+CustomerRegistrationController "1" --> "1" HubDAO : queries >
+CustomerRegistrationController ..> Customer : instantiates >
+CustomerRegistrationController ..> DeliveryAddress : instantiates >
+CustomerRegistrationController ..> Hub : queries distance >
+
+Customer <|-- LocalCustomer
+Customer <|-- ForeignTourist
+Customer "1" *--> "1..*" DeliveryAddress : maintains >
+@enduml

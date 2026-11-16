@@ -1,0 +1,41 @@
+@startuml
+skinparam style strictuml
+skinparam defaultTextAlignment center
+
+|Customer|
+start
+:Browse Menus;
+:Place Order & Pay;
+
+|OFDH System|
+if (Capacity OK?) then ([Overloaded])
+    :Cancel Order;
+    |Customer|
+    stop
+else ([Capacity Available])
+    |Kitchen Staff|
+    :Review Order;
+    if (Accept?) then ([Rejected])
+        |OFDH System|
+        :Cancel Order;
+        |Customer|
+        stop
+    else ([Accepted])
+        |Kitchen Staff|
+        :Prepare Food;
+        :Mark as Ready;
+        
+        |OFDH System|
+        :Alert Shipper;
+        
+        |Shipper|
+        :Pick Up Food;
+        :Deliver Food;
+        
+        |Customer|
+        :Receive Order;
+        :Rate & Review;
+        stop
+    endif
+endif
+@enduml
