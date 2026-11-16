@@ -1,0 +1,34 @@
+@startuml
+skinparam shadowing false
+autonumber
+actor "Shipper" as Ship
+participant ":OFDHSystem" as Sys
+
+Ship -> Sys : acceptDeliveryTask(shipperId, orderId)
+activate Sys
+Sys --> Ship : displayPickupAndAddressDetails(orderId, hubName, deliveryAddress, paymentMethod, totalAmount)
+deactivate Sys
+
+Ship -> Sys : confirmOrderPickup(shipperId, orderId)
+activate Sys
+Sys --> Ship : confirmPickupLogged(orderId, orderStatus="PickedUp", shipperStatus="OnDelivery")
+deactivate Sys
+
+alt Successful Delivery to Customer / Hotel
+    opt Order is Cash on Delivery (COD)
+        Ship -> Sys : confirmCashCollected(orderId, cashAmountCollected)
+        activate Sys
+        Sys --> Ship : updateCashLedger(paymentStatus="PaidCOD", updatedCashOnHand)
+        deactivate Sys
+    end
+    Ship -> Sys : confirmDeliverySuccess(shipperId, orderId)
+    activate Sys
+    Sys --> Ship : completeDelivery(orderId, orderStatus="Delivered", deliveredAt, shipperStatus="Available")
+    deactivate Sys
+else Delivery Failure (No Answer / Bad Address / Weather)
+    Ship -> Sys : reportDeliveryFailure(shipperId, orderId, failureReason)
+    activate Sys
+    Sys --> Ship : logDeliveryException(orderId, orderStatus="DeliveryFailed", shipperStatus="Available")
+    deactivate Sys
+end
+@enduml

@@ -1,23 +1,28 @@
 @startuml
 skinparam shadowing false
 autonumber
-actor "Manager" as Mgr
+actor "Customer\n(Local / Tourist)" as Cust
 participant ":OFDHSystem" as Sys
 
-Mgr -> Sys : openReportingDashboard()
+Cust -> Sys : selectAccountType(accountType)
 activate Sys
-Sys --> Mgr : displayFilterOptions(reportTypes, hubList, brandList)
+Sys --> Cust : displayRegistrationForm(requiredFields)
 deactivate Sys
 
-Mgr -> Sys : generateReport(reportType, startDate, endDate, hubIdFilter, brandIdFilter)
+Cust -> Sys : submitRegistration(name, email, vnPhoneOrPassport, nationality)
 activate Sys
-Sys --> Mgr : displayRenderedReport(reportId, totalRevenue, totalOrders, avgDeliveryTimeMins, chartData)
+Sys --> Cust : confirmAccountCreated(customerId, status="Active")
 deactivate Sys
 
-opt Export or Archive Report Snapshot
-    Mgr -> Sys : exportOrArchiveReport(reportId, actionFormat)
+Cust -> Sys : addDeliveryAddress(customerId, street, district, hotelOrLandmark)
+activate Sys
+Sys --> Cust : confirmAddressSaved(addressId, distanceKm, isEligibleForDelivery)
+deactivate Sys
+
+opt Manage Existing Addresses (Update / Delete)
+    Cust -> Sys : updateOrDeleteAddress(customerId, addressId, action, newDetails)
     activate Sys
-    Sys --> Mgr : confirmReportAction(reportId, downloadUrlOrArchiveStatus)
+    Sys --> Cust : displayUpdatedAddressBook(addressList)
     deactivate Sys
 end
 @enduml

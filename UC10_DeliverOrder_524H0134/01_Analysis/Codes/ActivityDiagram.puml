@@ -1,0 +1,39 @@
+@startuml
+skinparam shadowing false
+|Shipper|
+start
+:Accept Ready Order Assignment & Arrive at Hub;
+:Verify Package & Click "Confirm Pickup";
+|OFDH System|
+:Update Order State = PickedUp;
+:Set Shipper Status = OnDelivery;
+:Display Delivery Route & Customer/Hotel Details;
+|Shipper|
+:Travel to Customer Delivery Address;
+if (Customer Reachable & Address Found?) then (Yes)
+  |OFDH System|
+  if (Payment Method == COD?) then (Yes)
+    :Prompt Shipper to Collect Cash (totalAmount);
+    |Shipper|
+    :Collect Cash & Click "Confirm Cash Received";
+    |OFDH System|
+    :Update paymentStatus = PaidCOD;
+    :Increment Shipper.cashOnHand;
+  else (No - Already Paid Online)
+  endif
+  |Shipper|
+  :Hand Over Food & Click "Confirm Delivery";
+  |OFDH System|
+  :Update Order State = Delivered & Record deliveredAt;
+  :Decrement Hub currentActiveOrders (-1);
+  :Send Digital Receipt to Customer;
+else (No - Delivery Failed)
+  |Shipper|
+  :Click "Report Delivery Failure" & Select Reason;
+  |OFDH System|
+  :Update Order State = DeliveryFailed;
+  :Log failureReason & Alert Office Staff;
+endif
+:Set Shipper Status = Available;
+stop
+@enduml

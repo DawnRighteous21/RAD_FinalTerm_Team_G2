@@ -1,34 +1,35 @@
 @startuml
 skinparam shadowing false
-|Manager|
+|Customer (Local / Tourist)|
 start
-:Open Management Reporting Dashboard;
-:Select Report Type (Sales, Hub Workload, Delivery Performance);
-:Input Date Range (startDate, endDate) & Hub/Brand Filters;
+:Select Register / Manage Profile;
+:Choose Customer Type (Local vs Tourist);
 |OFDH System|
-if (startDate <= endDate?) then (No)
-  :Display Invalid Date Range Error;
+if (Customer Type?) then (Local Customer)
+  :Display Local Form (VN Phone + Name);
+else (Foreign Tourist)
+  :Display Tourist Form (Passport + Email + Hotel);
+endif
+|Customer (Local / Tourist)|
+:Enter Credentials & Submit;
+|OFDH System|
+:Validate Uniqueness & Format;
+if (Valid & Unique?) then (No)
+  :Show Duplicate/Format Error;
   stop
 else (Yes)
-  :Query Order, Hub, and Shipper Records;
+  :Create Customer Profile (State = Active);
+  :Prompt for Delivery Address;
 endif
-if (Matching Records Found?) then (No)
-  :Display "No Data Available for Selected Filters";
-  stop
-else (Yes)
-  :Aggregate Revenue, Peak Utilization %, & Avg Delivery Time;
-  :Save ManagementReport Snapshot (State = Generated);
-  :Render Charts & Summary Tables;
+|Customer (Local / Tourist)|
+:Input Street/Hotel Address & District;
+|OFDH System|
+:Calculate Distance to Nearest Hub;
+if (Within Max Delivery Distance?) then (Yes)
+  :Save DeliveryAddress (State = Verified);
+else (No)
+  :Save DeliveryAddress with Out-of-Range Warning;
 endif
-|Manager|
-:Review Report Analytics;
-if (Export or Archive?) then (Export PDF/CSV)
-  |OFDH System|
-  :Generate Export File (State = Exported);
-elseif (Archive?) then (Archive)
-  |OFDH System|
-  :Mark Report Snapshot Archived;
-else (Close)
-endif
+:Display Profile & Address Book Confirmation;
 stop
 @enduml

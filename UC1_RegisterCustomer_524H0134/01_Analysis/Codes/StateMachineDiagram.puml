@@ -1,15 +1,16 @@
 @startuml
 skinparam shadowing false
-[*] --> ParametersConfiguring : openReportingDashboard()
+[*] --> Unregistered : Open Registration Form
 
-ParametersConfiguring --> AggregatingData : generateReport(type, startDate, endDate)\n[startDate <= endDate]
-AggregatingData --> ParametersConfiguring : [no matching records found]\n/ notifyEmptyDataset()
+state Unregistered {
+}
 
-AggregatingData --> Generated : [records > 0]\n/ computeKPIs() & saveSnapshot()
-Generated --> Exported : exportReport(format="PDF/CSV")
-Exported --> Generated : viewReport()
+Unregistered --> ActiveProfile : submitRegistration() [credentials valid]\n/ create Customer
+ActiveProfile --> ActiveWithVerifiedAddress : addDeliveryAddress() [distance <= maxDistance]
+ActiveProfile --> ActiveWithOutOfRangeAddress : addDeliveryAddress() [distance > maxDistance]
 
-Generated --> ArchivedReport : archiveReport(reportId)
-Exported --> ArchivedReport : archiveReport(reportId)
-ArchivedReport --> [*]
+ActiveWithVerifiedAddress --> ActiveWithVerifiedAddress : updateAddress() / recalculateDistance()
+ActiveWithOutOfRangeAddress --> ActiveWithVerifiedAddress : updateAddress() [new distance <= maxDistance]
+ActiveWithVerifiedAddress --> AddressArchived : deleteAddress() [not attached to active order]
+AddressArchived --> [*]
 @enduml

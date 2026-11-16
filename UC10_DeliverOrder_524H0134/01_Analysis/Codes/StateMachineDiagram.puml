@@ -1,0 +1,19 @@
+@startuml
+skinparam shadowing false
+[*] --> Offline : Shipper App Closed
+
+Offline --> Available : loginShift()
+Available --> AssignedToOrder : acceptDeliveryTask(orderId)
+AssignedToOrder --> OnDelivery : confirmOrderPickup(orderId)\n[Order == ReadyForPickup]
+
+OnDelivery --> CollectingCOD : arriveAtAddress() [paymentMethod == COD]
+CollectingCOD --> CompletingHandover : confirmCashCollected(amount)\n/ cashOnHand += amount
+OnDelivery --> CompletingHandover : arriveAtAddress() [paymentMethod == Online]
+
+CompletingHandover --> Available : confirmDeliverySuccess()\n[Order -> Delivered]
+OnDelivery --> Available : reportDeliveryFailure(reason)\n[Order -> DeliveryFailed]
+
+Available --> SettlingCashAtHub : endShift() [cashOnHand > 0]
+SettlingCashAtHub --> Offline : reconcileCashWithHub()\n/ cashOnHand = 0
+Available --> Offline : endShift() [cashOnHand == 0]
+@enduml
