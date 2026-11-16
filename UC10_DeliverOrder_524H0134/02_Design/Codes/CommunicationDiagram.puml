@@ -1,0 +1,23 @@
+@startuml
+skinparam shadowing false
+skinparam objectBackgroundColor White
+skinparam objectBorderColor Black
+title 3.4.3 Communication Diagram - UC4 (Author: 524H0134)
+
+object ":ShipperDeliveryView" as View
+object ":DeliveryFulfilmentController" as Ctrl
+object ":OrderDAO" as ODAO
+object "ord:Order" as Ord
+object ":ShipperDAO" as SDAO
+object "shp:Shipper" as Ship
+object ":HubDAO" as HDAO
+object "hub:Hub" as Hub
+
+View --> Ctrl : 1: acceptTask()\n2: confirmPickup()\n3: confirmCashCollected()\n4: confirmDelivery()
+Ctrl --> ODAO : 1.1: findById()\n2.3: updateDeliveryStatus()\n4.3: updateDeliveryStatus()
+Ctrl --> SDAO : 1.2: findById()\n2.4: updateShipperStateAndCash()\n4.4: updateShipperStateAndCash()
+Ctrl --> Ord : 2.1: markPickedUp()\n3.1: recordCODPayment()\n4.1: markDelivered()
+Ctrl --> Ship : 2.2: assignToOrder()\n3.2: addCollectedCash()\n4.2: markAvailable()
+Ctrl --> HDAO : 4.5: findById()\n4.7: updateActiveOrderCount()
+Ctrl --> Hub : 4.6: decrementActiveOrders()
+@enduml

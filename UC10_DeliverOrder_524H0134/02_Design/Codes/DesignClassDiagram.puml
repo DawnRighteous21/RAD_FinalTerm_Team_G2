@@ -1,0 +1,99 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+title 3.4.2 Design Class Diagram (All Layers) - UC4 (Author: 524H0134)
+
+package "UI (View) Layer" {
+    class ShipperDeliveryView {
+        - shipperId: String
+        - activeOrderId: String
+        + acceptTaskClick(shipperId: String, orderId: String): void
+        + confirmPickupClick(shipperId: String, orderId: String): void
+        + confirmCashCollectedClick(orderId: String, amount: Decimal): void
+        + confirmDeliveryClick(shipperId: String, orderId: String): void
+        + reportFailureClick(shipperId: String, orderId: String, reason: String): void
+        + displayTaskDetails(order: Order, addr: DeliveryAddress): void
+    }
+}
+
+package "Controller Layer" {
+    class DeliveryFulfilmentController {
+        + acceptDeliveryTask(shipperId: String, orderId: String): Order
+        + confirmOrderPickup(shipperId: String, orderId: String): Boolean
+        + confirmCashCollected(shipperId: String, orderId: String, amount: Decimal): Decimal
+        + confirmDeliverySuccess(shipperId: String, orderId: String): Order
+        + reportDeliveryFailure(shipperId: String, orderId: String, reason: String): Order
+    }
+}
+
+package "Domain Layer" {
+    class Order {
+        - orderId: String
+        - orderStatus: String
+        - totalAmount: Decimal
+        - paymentMethod: String
+        - paymentStatus: String
+        - deliveredAt: DateTime
+        - failureReason: String
+        + markPickedUp(shipperId: String): void
+        + recordCODPayment(amount: Decimal): Boolean
+        + markDelivered(): void
+        + markDeliveryFailed(reason: String): void
+    }
+
+    class Shipper {
+        - shipperId: String
+        - fullName: String
+        - phoneNumber: String
+        - vehiclePlate: String
+        - availabilityStatus: String
+        - cashOnHand: Decimal
+        + assignToOrder(): void
+        + addCollectedCash(amount: Decimal): Decimal
+        + markAvailable(): void
+    }
+
+    class Hub {
+        - hubId: String
+        - currentActiveOrders: Integer
+        + decrementActiveOrders(): Integer
+    }
+
+    class DeliveryAddress {
+        - addressId: String
+        - recipientName: String
+        - streetAddress: String
+        - district: String
+        - landmarkOrHotel: String
+    }
+}
+
+package "Data Access Layer" {
+    class OrderDAO {
+        + findById(orderId: String): Order
+        + updateDeliveryStatus(order: Order): Boolean
+    }
+
+    class ShipperDAO {
+        + findById(shipperId: String): Shipper
+        + updateShipperStateAndCash(shipper: Shipper): Boolean
+    }
+
+    class HubDAO {
+        + findById(hubId: String): Hub
+        + updateActiveOrderCount(hubId: String, count: Integer): Boolean
+    }
+}
+
+Shipper "0..1" -- "0..*" Order : delivers >
+DeliveryAddress "1" -- "0..*" Order : destination >
+Hub "1" -- "0..*" Order : dispatches >
+
+ShipperDeliveryView ..> DeliveryFulfilmentController
+DeliveryFulfilmentController ..> Order
+DeliveryFulfilmentController ..> Shipper
+DeliveryFulfilmentController ..> Hub
+DeliveryFulfilmentController ..> OrderDAO
+DeliveryFulfilmentController ..> ShipperDAO
+DeliveryFulfilmentController ..> HubDAO
+@enduml
