@@ -1,0 +1,15 @@
+@startuml
+skinparam shadowing false
+[*] --> ParametersConfiguring : openReportingDashboard()
+
+ParametersConfiguring --> AggregatingData : generateReport(type, startDate, endDate)\n[startDate <= endDate]
+AggregatingData --> ParametersConfiguring : [no matching records found]\n/ notifyEmptyDataset()
+
+AggregatingData --> Generated : [records > 0]\n/ computeKPIs() & saveSnapshot()
+Generated --> Exported : exportReport(format="PDF/CSV")
+Exported --> Generated : viewReport()
+
+Generated --> ArchivedReport : archiveReport(reportId)
+Exported --> ArchivedReport : archiveReport(reportId)
+ArchivedReport --> [*]
+@enduml

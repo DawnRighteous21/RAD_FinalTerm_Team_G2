@@ -1,0 +1,34 @@
+@startuml
+skinparam shadowing false
+|Manager|
+start
+:Open Management Reporting Dashboard;
+:Select Report Type (Sales, Hub Workload, Delivery Performance);
+:Input Date Range (startDate, endDate) & Hub/Brand Filters;
+|OFDH System|
+if (startDate <= endDate?) then (No)
+  :Display Invalid Date Range Error;
+  stop
+else (Yes)
+  :Query Order, Hub, and Shipper Records;
+endif
+if (Matching Records Found?) then (No)
+  :Display "No Data Available for Selected Filters";
+  stop
+else (Yes)
+  :Aggregate Revenue, Peak Utilization %, & Avg Delivery Time;
+  :Save ManagementReport Snapshot (State = Generated);
+  :Render Charts & Summary Tables;
+endif
+|Manager|
+:Review Report Analytics;
+if (Export or Archive?) then (Export PDF/CSV)
+  |OFDH System|
+  :Generate Export File (State = Exported);
+elseif (Archive?) then (Archive)
+  |OFDH System|
+  :Mark Report Snapshot Archived;
+else (Close)
+endif
+stop
+@enduml
