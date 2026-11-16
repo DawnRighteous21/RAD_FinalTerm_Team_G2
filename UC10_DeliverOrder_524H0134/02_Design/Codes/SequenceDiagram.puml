@@ -1,0 +1,131 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 3.4.4 Detailed Sequence Diagram - UC4: Deliver an Order (Author: 524H0134)
+
+actor "Shipper" as Ship
+boundary ":ShipperDeliveryView" as View
+control ":DeliveryFulfilmentController" as Ctrl
+entity ":OrderDAO" as ODAO
+entity "ord:Order" as DomOrd
+entity ":ShipperDAO" as SDAO
+entity "shp:Shipper" as DomShip
+entity ":HubDAO" as HDAO
+entity "hub:Hub" as DomHub
+
+Ship -> View : acceptTaskClick(shipperId, orderId)
+activate View
+View -> Ctrl : acceptDeliveryTask(shipperId, orderId)
+activate Ctrl
+Ctrl -> ODAO : findById(orderId)
+activate ODAO
+ODAO --> Ctrl : ord (with DeliveryAddress)
+deactivate ODAO
+Ctrl -> SDAO : findById(shipperId)
+activate SDAO
+SDAO --> Ctrl : shp
+deactivate SDAO
+Ctrl --> View : ord
+deactivate Ctrl
+View --> Ship : displayTaskDetails(ord, deliveryAddress)
+deactivate View
+
+Ship -> View : confirmPickupClick(shipperId, orderId)
+activate View
+View -> Ctrl : confirmOrderPickup(shipperId, orderId)
+activate Ctrl
+Ctrl -> DomOrd : markPickedUp(shipperId)
+activate DomOrd
+DomOrd --> Ctrl : status="PickedUp"
+deactivate DomOrd
+Ctrl -> DomShip : assignToOrder()
+activate DomShip
+DomShip --> Ctrl : availabilityStatus="OnDelivery"
+deactivate DomShip
+Ctrl -> ODAO : updateDeliveryStatus(ord)
+activate ODAO
+ODAO --> Ctrl : true
+deactivate ODAO
+Ctrl -> SDAO : updateShipperStateAndCash(shp)
+activate SDAO
+SDAO --> Ctrl : true
+deactivate SDAO
+Ctrl --> View : true
+deactivate Ctrl
+View --> Ship : displayPickupConfirmed("PickedUp - Navigate to Customer")
+deactivate View
+
+alt Successful Delivery to Customer / Hotel
+    opt Order is Cash on Delivery (paymentMethod == "COD")
+        Ship -> View : confirmCashCollectedClick(orderId, cashAmount)
+        activate View
+        View -> Ctrl : confirmCashCollected(shipperId, orderId, cashAmount)
+        activate Ctrl
+        Ctrl -> DomOrd : recordCODPayment(cashAmount)
+        activate DomOrd
+        DomOrd --> Ctrl : true (paymentStatus="PaidCOD")
+        deactivate DomOrd
+        Ctrl -> DomShip : addCollectedCash(cashAmount)
+        activate DomShip
+        DomShip --> Ctrl : updatedCashOnHand
+        deactivate DomShip
+        Ctrl --> View : updatedCashOnHand
+        deactivate Ctrl
+        View --> Ship : displayCashLedgerUpdated(updatedCashOnHand)
+        deactivate View
+    end
+
+    Ship -> View : confirmDeliveryClick(shipperId, orderId)
+    activate View
+    View -> Ctrl : confirmDeliverySuccess(shipperId, orderId)
+    activate Ctrl
+    Ctrl -> DomOrd : markDelivered()
+    activate DomOrd
+    DomOrd --> Ctrl : status="Delivered", deliveredAt
+    deactivate DomOrd
+    Ctrl -> DomShip : markAvailable()
+    activate DomShip
+    DomShip --> Ctrl : availabilityStatus="Available"
+    deactivate DomShip
+else Delivery Failure (No Answer / Wrong Address / Rain Delay)
+    Ship -> View : reportFailureClick(shipperId, orderId, failureReason)
+    activate View
+    View -> Ctrl : reportDeliveryFailure(shipperId, orderId, failureReason)
+    activate Ctrl
+    Ctrl -> DomOrd : markDeliveryFailed(failureReason)
+    activate DomOrd
+    DomOrd --> Ctrl : status="DeliveryFailed"
+    deactivate DomOrd
+    Ctrl -> DomShip : markAvailable()
+    activate DomShip
+    DomShip --> Ctrl : availabilityStatus="Available"
+    deactivate DomShip
+end
+
+Ctrl -> ODAO : updateDeliveryStatus(ord)
+activate ODAO
+ODAO --> Ctrl : true
+deactivate ODAO
+Ctrl -> SDAO : updateShipperStateAndCash(shp)
+activate SDAO
+SDAO --> Ctrl : true
+deactivate SDAO
+
+Ctrl -> HDAO : findById(ord.hubId)
+activate HDAO
+HDAO --> Ctrl : hub
+deactivate HDAO
+Ctrl -> DomHub : decrementActiveOrders()
+activate DomHub
+DomHub --> Ctrl : newActiveCount
+deactivate DomHub
+Ctrl -> HDAO : updateActiveOrderCount(hub.hubId, newActiveCount)
+activate HDAO
+HDAO --> Ctrl : true
+deactivate HDAO
+
+Ctrl --> View : ord
+deactivate Ctrl
+View --> Ship : displayTaskCompleted(ord.orderStatus)
+deactivate View
+@enduml
