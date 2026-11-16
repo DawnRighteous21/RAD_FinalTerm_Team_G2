@@ -1,0 +1,21 @@
+@startuml
+skinparam shadowing false
+skinparam objectBackgroundColor White
+skinparam objectBorderColor Black
+title 3.3.3 Communication Diagram - UC3 (Author: 524H0015)
+
+object ":KitchenDisplayView" as View
+object ":KitchenPrepController" as Ctrl
+object ":OrderDAO" as ODAO
+object "ord:Order" as Ord
+object ":HubMenuItemDAO" as HMDAO
+object "hmi:HubMenuItem" as HMI
+object ":ShipperNotificationService" as Notify
+
+View --> Ctrl : 1: getOrderQueue()\n2: getOrderDetails()\n3: startPreparation()\n4: markItemOutOfStock()\n5: markOrderReady()
+Ctrl --> ODAO : 1.1: findConfirmedByHub()\n2.1: findByIdWithItems()\n3.2: updateOrderPrepState()\n5.2: updateOrderPrepState()
+Ctrl --> Ord : 3.1: startPreparation()\n5.1: markOrderReady()
+Ctrl --> HMDAO : 4.1: findByHubAndItem()\n4.3: updateStockAvailability()
+Ctrl --> HMI : 4.2: markOutOfStock()
+Ctrl --> Notify : 5.3: broadcastPickupAlert()
+@enduml

@@ -1,0 +1,89 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+title 3.3.2 Design Class Diagram (All Layers) - UC3 (Author: 524H0015)
+
+package "UI (View) Layer" {
+    class KitchenDisplayView {
+        - activeHubId: String
+        - selectedOrderId: String
+        + loadQueueClick(hubId: String): void
+        + selectOrderClick(orderId: String): void
+        + startPrepClick(orderId: String, staffId: String): void
+        + markItemOutOfStockClick(hubId: String, itemId: String): void
+        + markReadyClick(orderId: String, staffId: String): void
+        + renderOrderQueue(orders: List<Order>): void
+        + renderTicketDetails(order: Order): void
+    }
+}
+
+package "Controller Layer" {
+    class KitchenPrepController {
+        + getConfirmedOrderQueue(hubId: String): List<Order>
+        + getOrderDetails(orderId: String): Order
+        + startPreparation(orderId: String, staffId: String): Order
+        + markHubItemUnavailable(hubId: String, itemId: String): Boolean
+        + markOrderReady(orderId: String, staffId: String): Order
+    }
+}
+
+package "Domain Layer" {
+    class Order {
+        - orderId: String
+        - orderStatus: String
+        - prepStartedAt: DateTime
+        - readyAt: DateTime
+        + startPreparation(): Boolean
+        + markOrderReady(): Boolean
+        + getPrepDurationMins(): Decimal
+    }
+
+    class OrderItem {
+        - orderItemId: String
+        - quantity: Integer
+        - specialInstructions: String
+    }
+
+    class Hub {
+        - hubId: String
+        - hubName: String
+        - currentActiveOrders: Integer
+    }
+
+    class HubMenuItem {
+        - hubId: String
+        - itemId: String
+        - isAvailableInStock: Boolean
+        - lastUpdated: DateTime
+        + markOutOfStock(): void
+    }
+}
+
+package "Data Access Layer" {
+    class OrderDAO {
+        + findConfirmedByHub(hubId: String): List<Order>
+        + findByIdWithItems(orderId: String): Order
+        + updateOrderPrepState(orderId: String, status: String, timestamp: DateTime): Boolean
+    }
+
+    class HubMenuItemDAO {
+        + findByHubAndItem(hubId: String, itemId: String): HubMenuItem
+        + updateStockAvailability(hubMenuItem: HubMenuItem): Boolean
+    }
+
+    class ShipperNotificationService {
+        + broadcastPickupAlert(orderId: String, hubId: String): void
+    }
+}
+
+Order "1" *-- "1..*" OrderItem : contains >
+Hub "1" -- "0..*" Order : prepares >
+Hub "1" -- "1..*" HubMenuItem : tracks stock >
+
+KitchenDisplayView ..> KitchenPrepController
+KitchenPrepController ..> Order
+KitchenPrepController ..> HubMenuItem
+KitchenPrepController ..> OrderDAO
+KitchenPrepController ..> HubMenuItemDAO
+KitchenPrepController ..> ShipperNotificationService
+@enduml
