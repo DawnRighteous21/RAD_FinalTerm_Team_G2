@@ -1,0 +1,19 @@
+@startuml
+skinparam shadowing false
+skinparam objectBackgroundColor White
+skinparam objectBorderColor Black
+title 3.5.3 Communication Diagram - UC5 (Author: 524H0012)
+
+object ":BrandMenuAdminView" as View
+object ":CatalogAdminController" as Ctrl
+object ":BrandDAO" as BDAO
+object ":MenuItemDAO" as MDAO
+object "item:MenuItem" as Item
+object ":HubMenuItemDAO" as HMDAO
+
+View --> Ctrl : 1: loadCatalog()\n2: createMenuItem()\n3: updateMenuItem()\n4: archiveCatalogEntity()
+Ctrl --> BDAO : 1.1: findAllBrands()
+Ctrl --> MDAO : 1.2: findAllMenuItems()\n2.1: existsByNameInBrand()\n2.3: insertMenuItem()\n3.1: findById()\n3.3: updateMenuItem()\n4.1: findById()\n4.3: archiveMenuItem()
+Ctrl --> Item : 2.2: <<create>>\n3.2: updateDetails()\n4.2: archiveItem()
+Ctrl --> HMDAO : 2.4: assignItemToHubs()
+@enduml

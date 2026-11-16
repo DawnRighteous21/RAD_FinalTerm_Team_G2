@@ -1,0 +1,91 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+title 3.5.2 Design Class Diagram (All Layers) - UC5 (Author: 524H0012)
+
+package "UI (View) Layer" {
+    class BrandMenuAdminView {
+        - selectedBrandId: String
+        - selectedItemId: String
+        + openCatalogConsole(): void
+        + createMenuItemClick(brandId: String, name: String, descEn: String, descVi: String, price: Decimal, hubIds: List<String>): void
+        + updateMenuItemClick(itemId: String, name: String, descEn: String, descVi: String, price: Decimal): void
+        + archiveBrandOrItemClick(targetId: String, type: String): void
+        + renderCatalog(brands: List<Brand>, items: List<MenuItem>): void
+    }
+}
+
+package "Controller Layer" {
+    class CatalogAdminController {
+        + loadCatalog(): Map<String, List>
+        + createMenuItem(brandId: String, name: String, descEn: String, descVi: String, price: Decimal, hubIds: List<String>): MenuItem
+        + updateMenuItem(itemId: String, name: String, descEn: String, descVi: String, price: Decimal): MenuItem
+        + archiveCatalogEntity(targetId: String, entityType: String): Boolean
+    }
+}
+
+package "Domain Layer" {
+    class Brand {
+        - brandId: String
+        - brandName: String
+        - cuisineType: String
+        - description: String
+        - isActive: Boolean
+        + validateBrand(): Boolean
+        + deactivateBrand(): void
+    }
+
+    class MenuItem {
+        - itemId: String
+        - brandId: String
+        - itemName: String
+        - descriptionEn: String
+        - descriptionVi: String
+        - unitPrice: Decimal
+        - category: String
+        - isActive: Boolean
+        + validateItemData(): Boolean
+        + updateDetails(name: String, descEn: String, descVi: String, price: Decimal): void
+        + archiveItem(): void
+    }
+
+    class HubMenuItem {
+        - hubId: String
+        - itemId: String
+        - isAvailableInStock: Boolean
+        - dailyPrepLimit: Integer
+    }
+}
+
+package "Data Access Layer" {
+    class BrandDAO {
+        + findAllBrands(): List<Brand>
+        + insertBrand(brand: Brand): Boolean
+        + updateBrandStatus(brandId: String, isActive: Boolean): Boolean
+    }
+
+    class MenuItemDAO {
+        + findAllMenuItems(): List<MenuItem>
+        + findById(itemId: String): MenuItem
+        + existsByNameInBrand(brandId: String, itemName: String): Boolean
+        + insertMenuItem(item: MenuItem): Boolean
+        + updateMenuItem(item: MenuItem): Boolean
+        + archiveMenuItem(itemId: String): Boolean
+    }
+
+    class HubMenuItemDAO {
+        + assignItemToHubs(itemId: String, hubIds: List<String>): Boolean
+    }
+}
+
+Brand "1" o-- "1..*" MenuItem : offers >
+MenuItem "1" -- "1..*" HubMenuItem : stocked at >
+
+BrandMenuAdminView ..> CatalogAdminController
+CatalogAdminController ..> Brand
+CatalogAdminController ..> MenuItem
+CatalogAdminController ..> HubMenuItem
+CatalogAdminController ..> BrandDAO
+CatalogAdminController ..> MenuItemDAO
+CatalogAdminController ..> HubMenuItemDAO
+@enduml
