@@ -1,0 +1,71 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+title 3.3.5 Final Design Class Diagram with Navigation Arrows - UC3 (Author: 524H0015)
+
+class KitchenDisplayView {
+    - activeHubId: String
+    + loadQueueClick(hubId: String): void
+    + selectOrderClick(orderId: String): void
+    + startPrepClick(orderId: String, staffId: String): void
+    + markItemOutOfStockClick(hubId: String, itemId: String): void
+    + markReadyClick(orderId: String, staffId: String): void
+}
+
+class KitchenPrepController {
+    - orderDAO: OrderDAO
+    - hubMenuItemDAO: HubMenuItemDAO
+    - notificationService: ShipperNotificationService
+    + getConfirmedOrderQueue(hubId: String): List<Order>
+    + getOrderDetails(orderId: String): Order
+    + startPreparation(orderId: String, staffId: String): Order
+    + markHubItemUnavailable(hubId: String, itemId: String): Boolean
+    + markOrderReady(orderId: String, staffId: String): Order
+}
+
+class Order {
+    - orderId: String
+    - orderStatus: String
+    - prepStartedAt: DateTime
+    - readyAt: DateTime
+    + startPreparation(): Boolean
+    + markOrderReady(): Boolean
+}
+
+class OrderItem {
+    - orderItemId: String
+    - quantity: Integer
+    - specialInstructions: String
+}
+
+class HubMenuItem {
+    - hubId: String
+    - itemId: String
+    - isAvailableInStock: Boolean
+    - lastUpdated: DateTime
+    + markOutOfStock(): void
+}
+
+class OrderDAO {
+    + findConfirmedByHub(hubId: String): List<Order>
+    + findByIdWithItems(orderId: String): Order
+    + updateOrderPrepState(orderId: String, status: String, timestamp: DateTime): Boolean
+}
+
+class HubMenuItemDAO {
+    + findByHubAndItem(hubId: String, itemId: String): HubMenuItem
+    + updateStockAvailability(hmi: HubMenuItem): Boolean
+}
+
+class ShipperNotificationService {
+    + broadcastPickupAlert(orderId: String, hubId: String): void
+}
+
+KitchenDisplayView "1" --> "1" KitchenPrepController : invokes >
+KitchenPrepController "1" --> "1" OrderDAO : queries/updates >
+KitchenPrepController "1" --> "1" HubMenuItemDAO : updates stock >
+KitchenPrepController "1" --> "1" ShipperNotificationService : triggers >
+KitchenPrepController ..> Order : transitions state >
+KitchenPrepController ..> HubMenuItem : marks out of stock >
+Order "1" *--> "1..*" OrderItem : contains >
+@enduml
