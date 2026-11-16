@@ -1,0 +1,134 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 3.2.4 Detailed Sequence Diagram - UC2: Place an Order (Author: 524H0012)
+
+actor "Customer" as Cust
+boundary ":OrderCheckoutView" as View
+control ":PlaceOrderController" as Ctrl
+entity ":HubDAO" as HDAO
+entity "hub:Hub" as DomHub
+entity "ord:Order" as DomOrd
+entity "item:OrderItem" as DomItem
+entity ":VoucherDAO" as VDAO
+entity "vch:Voucher" as DomVch
+control ":PaymentGatewayAdapter" as PG
+entity ":OrderDAO" as ODAO
+
+Cust -> View : initiateCheckoutClick(customerId, hubId, addressId)
+activate View
+View -> Ctrl : initiateCheckout(customerId, hubId, addressId)
+activate Ctrl
+Ctrl -> HDAO : findById(hubId)
+activate HDAO
+HDAO --> Ctrl : hub
+deactivate HDAO
+
+Ctrl -> DomHub : canAcceptNewOrder()
+activate DomHub
+DomHub --> Ctrl : true (currentActiveOrders < maxActiveOrders)
+deactivate DomHub
+
+create DomOrd
+Ctrl -> DomOrd : <<create>>(customerId, hubId, addressId)
+activate DomOrd
+DomOrd -> DomOrd : calculateDeliveryFee(distanceKm)
+DomOrd --> Ctrl : deliveryFee
+deactivate DomOrd
+Ctrl --> View : true (deliveryFee)
+deactivate Ctrl
+View --> Cust : displayCartReady(deliveryFee)
+deactivate View
+
+loop For each selected MenuItem
+    Cust -> View : addItemClick(itemId, qty, note)
+    activate View
+    View -> Ctrl : addItemToOrder(itemId, qty, note)
+    activate Ctrl
+    Ctrl -> HDAO : checkItemStockAtHub(hubId, itemId)
+    activate HDAO
+    HDAO --> Ctrl : hubMenuItem (isAvailableInStock=true, unitPrice)
+    deactivate HDAO
+    Ctrl -> DomOrd : addOrderItem(menuItem, qty, note)
+    activate DomOrd
+    create DomItem
+    DomOrd -> DomItem : <<create>>(menuItem, qty, unitPrice, note)
+    activate DomItem
+    DomItem -> DomItem : calculateLineTotal()
+    DomItem --> DomOrd : lineTotal
+    deactivate DomItem
+    DomOrd --> Ctrl : subtotalAmount
+    deactivate DomOrd
+    Ctrl --> View : subtotalAmount
+    deactivate Ctrl
+    View --> Cust : displayRunningSubtotal(subtotalAmount)
+    deactivate View
+end
+
+opt Apply Discount Voucher (Max 1)
+    Cust -> View : applyVoucherClick(voucherCode)
+    activate View
+    View -> Ctrl : applyVoucher(voucherCode)
+    activate Ctrl
+    Ctrl -> VDAO : findByCode(voucherCode)
+    activate VDAO
+    VDAO --> Ctrl : vch
+    deactivate VDAO
+    Ctrl -> DomOrd : applySingleVoucher(vch)
+    activate DomOrd
+    DomOrd -> DomVch : isValidForOrder(subtotalAmount, today)
+    activate DomVch
+    DomVch --> DomOrd : true
+    deactivate DomVch
+    DomOrd -> DomVch : computeDiscount(subtotalAmount)
+    activate DomVch
+    DomVch --> DomOrd : discountAmount
+    deactivate DomVch
+    DomOrd -> DomOrd : calculateTotalAmount()
+    DomOrd --> Ctrl : updatedOrderPricing
+    deactivate DomOrd
+    Ctrl --> View : updatedOrderPricing
+    deactivate Ctrl
+    View --> Cust : displayPriceSummary(subtotal, fee, discount, totalAmount)
+    deactivate View
+end
+
+Cust -> View : confirmOrderClick(paymentMethod, paymentDetails)
+activate View
+View -> Ctrl : confirmAndPlaceOrder(paymentMethod, paymentDetails)
+activate Ctrl
+
+alt paymentMethod == "ONLINE"
+    Ctrl -> PG : authorizePayment(totalAmount, paymentMethod, paymentDetails)
+    activate PG
+    PG --> Ctrl : transactionRef (status="Paid")
+    deactivate PG
+    Ctrl -> DomOrd : markPlaced("Paid")
+    activate DomOrd
+    deactivate DomOrd
+else paymentMethod == "COD"
+    Ctrl -> DomOrd : markPlaced("PendingCOD")
+    activate DomOrd
+    deactivate DomOrd
+end
+
+Ctrl -> ODAO : saveOrderWithItems(ord)
+activate ODAO
+ODAO --> Ctrl : true
+deactivate ODAO
+
+Ctrl -> DomHub : incrementActiveOrders()
+activate DomHub
+DomHub --> Ctrl : newActiveCount
+deactivate DomHub
+
+Ctrl -> HDAO : updateActiveOrderCount(hubId, newActiveCount)
+activate HDAO
+HDAO --> Ctrl : true
+deactivate HDAO
+
+Ctrl --> View : ord (orderId, orderStatus="Placed")
+deactivate Ctrl
+View --> Cust : displayOrderConfirmation(orderId, receiptSummary)
+deactivate View
+@enduml
