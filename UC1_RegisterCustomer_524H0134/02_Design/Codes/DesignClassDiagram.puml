@@ -1,0 +1,104 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+title 3.1.2 Design Class Diagram (All Layers) - UC1 (Author: 524H0134)
+
+package "UI (View) Layer" {
+    class RegistrationAddressView {
+        - selectedAccountType: String
+        - inputFormFields: Map<String, String>
+        + displayRegistrationForm(accountType: String): void
+        + submitRegistrationClick(): void
+        + submitAddressClick(): void
+        + showConfirmation(message: String): void
+        + showError(errorMsg: String): void
+    }
+}
+
+package "Controller Layer" {
+    class CustomerRegistrationController {
+        + selectAccountType(accountType: String): List<String>
+        + registerCustomer(type: String, name: String, email: String, phoneOrPassport: String, natOrWallet: String): String
+        + addDeliveryAddress(customerId: String, street: String, district: String, landmark: String): DeliveryAddress
+        + updateOrArchiveAddress(customerId: String, addressId: String, action: String, details: Map): Boolean
+    }
+}
+
+package "Domain Layer" {
+    abstract class Customer {
+        # customerId: String
+        # fullName: String
+        # email: String
+        # status: String
+        # createdAt: DateTime
+        + validateEmailFormat(): Boolean
+        + activateProfile(): void
+    }
+
+    class LocalCustomer {
+        - vnPhoneNumber: String
+        - preferredLocalWallet: String
+        + validateVnPhone(): Boolean
+    }
+
+    class ForeignTourist {
+        - passportNumber: String
+        - nationality: String
+        - hotelName: String
+        - roomNumber: String
+        + validatePassport(): Boolean
+    }
+
+    class DeliveryAddress {
+        - addressId: String
+        - recipientName: String
+        - streetAddress: String
+        - district: String
+        - landmarkOrHotel: String
+        - distanceKmFromHub: Decimal
+        - isDefault: Boolean
+        - status: String
+        + verifyRange(maxDistKm: Decimal): Boolean
+        + markArchived(): void
+    }
+
+    class Hub {
+        - hubId: String
+        - hubName: String
+        - district: String
+        - maxDeliveryDistanceKm: Decimal
+        + calculateDistanceTo(street: String, district: String): Decimal
+    }
+}
+
+package "Data Access Layer" {
+    class CustomerDAO {
+        + existsByPhoneOrPassport(identifier: String): Boolean
+        + insertCustomer(customer: Customer): Boolean
+        + findById(customerId: String): Customer
+    }
+
+    class DeliveryAddressDAO {
+        + insertAddress(customerId: String, address: DeliveryAddress): Boolean
+        + updateAddress(address: DeliveryAddress): Boolean
+        + archiveAddress(addressId: String): Boolean
+        + findByCustomerId(customerId: String): List<DeliveryAddress>
+    }
+
+    class HubDAO {
+        + findNearestHub(district: String): Hub
+    }
+}
+
+Customer <|-- LocalCustomer
+Customer <|-- ForeignTourist
+Customer "1" *-- "1..*" DeliveryAddress : owns >
+
+RegistrationAddressView ..> CustomerRegistrationController
+CustomerRegistrationController ..> Customer
+CustomerRegistrationController ..> DeliveryAddress
+CustomerRegistrationController ..> Hub
+CustomerRegistrationController ..> CustomerDAO
+CustomerRegistrationController ..> DeliveryAddressDAO
+CustomerRegistrationController ..> HubDAO
+@enduml

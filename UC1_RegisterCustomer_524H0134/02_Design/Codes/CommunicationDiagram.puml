@@ -1,0 +1,23 @@
+@startuml
+skinparam shadowing false
+skinparam objectBackgroundColor White
+skinparam objectBorderColor Black
+title 3.1.3 Communication Diagram - UC1 (Author: 524H0134)
+
+object ":RegistrationAddressView" as View
+object ":CustomerRegistrationController" as Ctrl
+object ":CustomerDAO" as CDAO
+object "cust:Customer" as Cust
+object ":HubDAO" as HDAO
+object "hub:Hub" as Hub
+object "addr:DeliveryAddress" as Addr
+object ":DeliveryAddressDAO" as ADAO
+
+View --> Ctrl : 1: selectAccountType()\n2: registerCustomer()\n3: addDeliveryAddress()
+Ctrl --> CDAO : 2.1: existsByPhoneOrPassport()\n2.3: insertCustomer()
+Ctrl --> Cust : 2.2: <<create>>
+Ctrl --> HDAO : 3.1: findNearestHub()
+Ctrl --> Hub : 3.2: calculateDistanceTo()
+Ctrl --> Addr : 3.3: <<create>>
+Ctrl --> ADAO : 3.4: insertAddress()
+@enduml
