@@ -1,0 +1,107 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 3.5.4 Detailed Sequence Diagram - UC5: Manage Brands & Menu Items (Author: 524H0012)
+
+actor "Admin" as Adm
+boundary ":BrandMenuAdminView" as View
+control ":CatalogAdminController" as Ctrl
+entity ":BrandDAO" as BDAO
+entity ":MenuItemDAO" as MDAO
+entity "item:MenuItem" as DomItem
+entity ":HubMenuItemDAO" as HMDAO
+
+Adm -> View : openCatalogConsole()
+activate View
+View -> Ctrl : loadCatalog()
+activate Ctrl
+Ctrl -> BDAO : findAllBrands()
+activate BDAO
+BDAO --> Ctrl : brandList
+deactivate BDAO
+Ctrl -> MDAO : findAllMenuItems()
+activate MDAO
+MDAO --> Ctrl : itemList
+deactivate MDAO
+Ctrl --> View : catalogMap(brandList, itemList)
+deactivate Ctrl
+View --> Adm : renderCatalog(brandList, itemList)
+deactivate View
+
+alt Create New Bilingual Menu Item
+    Adm -> View : createMenuItemClick(brandId, name, descEn, descVi, price, hubIds)
+    activate View
+    View -> Ctrl : createMenuItem(brandId, name, descEn, descVi, price, hubIds)
+    activate Ctrl
+    Ctrl -> MDAO : existsByNameInBrand(brandId, name)
+    activate MDAO
+    MDAO --> Ctrl : false (unique)
+    deactivate MDAO
+
+    create DomItem
+    Ctrl -> DomItem : <<create>>(brandId, name, descEn, descVi, price)
+    activate DomItem
+    DomItem -> DomItem : validateItemData()
+    DomItem --> Ctrl : item (isActive=true)
+    deactivate DomItem
+
+    Ctrl -> MDAO : insertMenuItem(item)
+    activate MDAO
+    MDAO --> Ctrl : true
+    deactivate MDAO
+
+    Ctrl -> HMDAO : assignItemToHubs(item.itemId, hubIds)
+    activate HMDAO
+    HMDAO --> Ctrl : true
+    deactivate HMDAO
+    Ctrl --> View : item
+    deactivate Ctrl
+    View --> Adm : showConfirmation("Menu Item Created: " + item.itemId)
+    deactivate View
+
+else Update Existing Menu Item
+    Adm -> View : updateMenuItemClick(itemId, name, descEn, descVi, newPrice)
+    activate View
+    View -> Ctrl : updateMenuItem(itemId, name, descEn, descVi, newPrice)
+    activate Ctrl
+    Ctrl -> MDAO : findById(itemId)
+    activate MDAO
+    MDAO --> Ctrl : item
+    deactivate MDAO
+    Ctrl -> DomItem : updateDetails(name, descEn, descVi, newPrice)
+    activate DomItem
+    DomItem -> DomItem : validateItemData()
+    DomItem --> Ctrl : true
+    deactivate DomItem
+    Ctrl -> MDAO : updateMenuItem(item)
+    activate MDAO
+    MDAO --> Ctrl : true
+    deactivate MDAO
+    Ctrl --> View : item
+    deactivate Ctrl
+    View --> Adm : showConfirmation("Menu Item Updated")
+    deactivate View
+
+else Archive (Soft-Delete) Menu Item or Brand
+    Adm -> View : archiveBrandOrItemClick(itemId, "MenuItem")
+    activate View
+    View -> Ctrl : archiveCatalogEntity(itemId, "MenuItem")
+    activate Ctrl
+    Ctrl -> MDAO : findById(itemId)
+    activate MDAO
+    MDAO --> Ctrl : item
+    deactivate MDAO
+    Ctrl -> DomItem : archiveItem()
+    activate DomItem
+    DomItem --> Ctrl : isActive=false
+    deactivate DomItem
+    Ctrl -> MDAO : archiveMenuItem(itemId)
+    activate MDAO
+    MDAO --> Ctrl : true
+    deactivate MDAO
+    Ctrl --> View : true
+    deactivate Ctrl
+    View --> Adm : showConfirmation("Item Archived (Hidden from Customer Menu)")
+    deactivate View
+end
+@enduml

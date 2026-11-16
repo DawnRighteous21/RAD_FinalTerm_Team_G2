@@ -1,0 +1,70 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+title 3.5.5 Final Design Class Diagram with Navigation Arrows - UC5 (Author: 524H0012)
+
+class BrandMenuAdminView {
+    + openCatalogConsole(): void
+    + createMenuItemClick(brandId: String, name: String, descEn: String, descVi: String, price: Decimal, hubIds: List<String>): void
+    + updateMenuItemClick(itemId: String, name: String, descEn: String, descVi: String, price: Decimal): void
+    + archiveBrandOrItemClick(targetId: String, type: String): void
+}
+
+class CatalogAdminController {
+    - brandDAO: BrandDAO
+    - menuItemDAO: MenuItemDAO
+    - hubMenuItemDAO: HubMenuItemDAO
+    + loadCatalog(): Map<String, List>
+    + createMenuItem(brandId: String, name: String, descEn: String, descVi: String, price: Decimal, hubIds: List<String>): MenuItem
+    + updateMenuItem(itemId: String, name: String, descEn: String, descVi: String, price: Decimal): MenuItem
+    + archiveCatalogEntity(targetId: String, entityType: String): Boolean
+}
+
+class Brand {
+    - brandId: String
+    - brandName: String
+    - cuisineType: String
+    - isActive: Boolean
+    + validateBrand(): Boolean
+    + deactivateBrand(): void
+}
+
+class MenuItem {
+    - itemId: String
+    - brandId: String
+    - itemName: String
+    - descriptionEn: String
+    - descriptionVi: String
+    - unitPrice: Decimal
+    - isActive: Boolean
+    + validateItemData(): Boolean
+    + updateDetails(name: String, descEn: String, descVi: String, price: Decimal): void
+    + archiveItem(): void
+}
+
+class BrandDAO {
+    + findAllBrands(): List<Brand>
+    + updateBrandStatus(brandId: String, isActive: Boolean): Boolean
+}
+
+class MenuItemDAO {
+    + findAllMenuItems(): List<MenuItem>
+    + findById(itemId: String): MenuItem
+    + existsByNameInBrand(brandId: String, itemName: String): Boolean
+    + insertMenuItem(item: MenuItem): Boolean
+    + updateMenuItem(item: MenuItem): Boolean
+    + archiveMenuItem(itemId: String): Boolean
+}
+
+class HubMenuItemDAO {
+    + assignItemToHubs(itemId: String, hubIds: List<String>): Boolean
+}
+
+BrandMenuAdminView "1" --> "1" CatalogAdminController : invokes >
+CatalogAdminController "1" --> "1" BrandDAO : queries/updates >
+CatalogAdminController "1" --> "1" MenuItemDAO : queries/persists >
+CatalogAdminController "1" --> "1" HubMenuItemDAO : links hubs >
+CatalogAdminController ..> MenuItem : instantiates & updates >
+CatalogAdminController ..> Brand : manages >
+Brand "1" o--> "1..*" MenuItem : contains >
+@enduml
