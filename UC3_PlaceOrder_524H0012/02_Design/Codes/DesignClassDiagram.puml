@@ -1,0 +1,127 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+title 3.2.2 Design Class Diagram (All Layers) - UC2 (Author: 524H0012)
+
+package "UI (View) Layer" {
+    class OrderCheckoutView {
+        - selectedHubId: String
+        - selectedAddressId: String
+        - voucherInput: String
+        - selectedPaymentMethod: String
+        + initiateCheckoutClick(): void
+        + addItemClick(itemId: String, qty: Integer, note: String): void
+        + applyVoucherClick(code: String): void
+        + confirmOrderClick(paymentMethod: String, cardToken: String): void
+        + displayPriceSummary(subtotal: Decimal, fee: Decimal, discount: Decimal, total: Decimal): void
+        + displayQuietHubSuggestion(altHub: Hub): void
+    }
+}
+
+package "Controller Layer" {
+    class PlaceOrderController {
+        - currentDraftOrder: Order
+        + initiateCheckout(customerId: String, hubId: String, addressId: String): Boolean
+        + addItemToOrder(itemId: String, qty: Integer, note: String): Decimal
+        + applyVoucher(voucherCode: String): Order
+        + confirmAndPlaceOrder(paymentMethod: String, paymentDetails: String): Order
+    }
+}
+
+package "Domain Layer" {
+    class Order {
+        - orderId: String
+        - orderDateTime: DateTime
+        - orderStatus: String
+        - subtotalAmount: Decimal
+        - deliveryFee: Decimal
+        - discountAmount: Decimal
+        - totalAmount: Decimal
+        - paymentMethod: String
+        - paymentStatus: String
+        + addOrderItem(item: MenuItem, qty: Integer, note: String): OrderItem
+        + calculateDeliveryFee(distanceKm: Decimal): Decimal
+        + applySingleVoucher(voucher: Voucher): Boolean
+        + calculateTotalAmount(): Decimal
+        + markPlaced(payStatus: String): void
+    }
+
+    class OrderItem {
+        - orderItemId: String
+        - quantity: Integer
+        - unitPriceAtOrder: Decimal
+        - lineTotal: Decimal
+        - specialInstructions: String
+        + calculateLineTotal(): Decimal
+    }
+
+    class Hub {
+        - hubId: String
+        - hubName: String
+        - maxActiveOrders: Integer
+        - currentActiveOrders: Integer
+        - maxDeliveryDistanceKm: Decimal
+        + canAcceptNewOrder(): Boolean
+        + incrementActiveOrders(): void
+    }
+
+    class MenuItem {
+        - itemId: String
+        - itemName: String
+        - unitPrice: Decimal
+        - isActive: Boolean
+    }
+
+    class HubMenuItem {
+        - isAvailableInStock: Boolean
+        - dailyPrepLimit: Integer
+        + checkStock(): Boolean
+    }
+
+    class Voucher {
+        - voucherCode: String
+        - discountPercentage: Decimal
+        - maxDiscountAmount: Decimal
+        - minOrderValue: Decimal
+        - validUntil: Date
+        - isActive: Boolean
+        + isValidForOrder(subtotal: Decimal, currentDate: Date): Boolean
+        + computeDiscount(subtotal: Decimal): Decimal
+    }
+}
+
+package "Data Access Layer" {
+    class OrderDAO {
+        + saveOrderWithItems(order: Order): Boolean
+    }
+
+    class HubDAO {
+        + findById(hubId: String): Hub
+        + checkItemStockAtHub(hubId: String, itemId: String): HubMenuItem
+        + updateActiveOrderCount(hubId: String, newCount: Integer): Boolean
+    }
+
+    class VoucherDAO {
+        + findByCode(voucherCode: String): Voucher
+    }
+
+    class PaymentGatewayAdapter {
+        + authorizePayment(amount: Decimal, method: String, details: String): String
+    }
+}
+
+Order "1" *-- "1..*" OrderItem : contains >
+Order "0..*" -- "0..1" Voucher : uses max 1 >
+OrderItem "*" -- "1" MenuItem : refers to >
+Hub "1..*" -- "1..*" MenuItem : stocks >
+(Hub, MenuItem) .. HubMenuItem
+
+OrderCheckoutView ..> PlaceOrderController
+PlaceOrderController ..> Order
+PlaceOrderController ..> Hub
+PlaceOrderController ..> Voucher
+PlaceOrderController ..> OrderDAO
+PlaceOrderController ..> HubDAO
+PlaceOrderController ..> VoucherDAO
+PlaceOrderController ..> PaymentGatewayAdapter
+@enduml

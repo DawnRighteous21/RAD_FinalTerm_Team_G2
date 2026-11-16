@@ -1,0 +1,27 @@
+@startuml
+skinparam shadowing false
+skinparam objectBackgroundColor White
+skinparam objectBorderColor Black
+title 3.2.3 Communication Diagram - UC2 (Author: 524H0012)
+
+object ":OrderCheckoutView" as View
+object ":PlaceOrderController" as Ctrl
+object ":HubDAO" as HDAO
+object "hub:Hub" as Hub
+object "ord:Order" as Ord
+object "item:OrderItem" as Item
+object ":VoucherDAO" as VDAO
+object "vch:Voucher" as Vch
+object ":PaymentGateway" as PG
+object ":OrderDAO" as ODAO
+
+View --> Ctrl : 1: initiateCheckout()\n2: addItemToOrder()\n3: applyVoucher()\n4: confirmAndPlaceOrder()
+Ctrl --> HDAO : 1.1: findById()\n2.1: checkItemStock()\n4.4: updateActiveOrderCount()
+Ctrl --> Hub : 1.2: canAcceptNewOrder()\n4.3: incrementActiveOrders()
+Ctrl --> Ord : 1.3: <<create>>\n2.2: addOrderItem()\n3.2: applySingleVoucher()\n4.2: markPlaced()
+Ord --> Item : 2.3: <<create>>
+Ctrl --> VDAO : 3.1: findByCode()
+Ord --> Vch : 3.3: isValidForOrder()
+Ctrl --> PG : 4.1: authorizePayment()
+Ctrl --> ODAO : 4.5: saveOrderWithItems()
+@enduml
