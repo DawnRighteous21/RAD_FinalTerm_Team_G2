@@ -1,0 +1,47 @@
+@startuml
+skinparam shadowing false
+|Customer|
+start
+:Select Hub, Add Menu Items to Cart & Click Checkout;
+|OFDH System|
+:Check Hub Workload (currentActiveOrders < maxActiveOrders);
+if (Hub Overloaded?) then (Yes - Busy Kitchen Rule)
+  :Block Order at Current Hub;
+  :Suggest Quieter Nearby Hub with Incentive;
+  stop
+else (No - Capacity OK)
+  :Verify Item Availability & Delivery Distance;
+endif
+|Customer|
+:Select DeliveryAddress & Optionally Enter 1 Voucher Code;
+|OFDH System|
+if (Voucher Entered?) then (Yes)
+  if (Valid & Only 1 Voucher?) then (Yes)
+    :Apply Voucher Discount;
+  else (No)
+    :Display Voucher Invalid/Limit Warning;
+  endif
+endif
+:Calculate Subtotal + Distance Fee - Discount;
+:Display Full Itemized Price Summary;
+|Customer|
+:Select Payment Method (Online vs COD) & Confirm Order;
+|OFDH System|
+if (Payment Method?) then (Online Gateway)
+  |Payment Gateway|
+  :Authorize Transaction (Local Wallet / Foreign Card);
+  |OFDH System|
+  if (Payment Approved?) then (No)
+    :Prompt Customer to Retry or Switch to COD;
+    stop
+  else (Yes)
+    :Set paymentStatus = Paid;
+  endif
+else (Cash on Delivery)
+  :Set paymentStatus = PendingCOD;
+endif
+:Create Order & OrderItems (orderStatus = Placed);
+:Increment Hub currentActiveOrders (+1);
+:Notify Kitchen Staff & Display Order Receipt/Tracker;
+stop
+@enduml

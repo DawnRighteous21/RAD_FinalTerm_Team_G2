@@ -1,0 +1,26 @@
+@startuml
+skinparam shadowing false
+[*] --> CartDraft : initiateCheckout()
+
+CartDraft --> PricedPendingConfirmation : applyVoucher() / calculateTotal()\n[hubCapacityOK & distanceOK]
+PricedPendingConfirmation --> PaymentFailed : confirmAndPlaceOrder()\n[online payment declined]
+PaymentFailed --> PricedPendingConfirmation : retryPayment() / switchToCOD()
+
+PricedPendingConfirmation --> Placed : confirmAndPlaceOrder()\n[COD selected OR online payment approved]
+
+Placed --> Cancelled : cancelOrder() [by Customer before prep]
+Placed --> Rejected : rejectOrder() [by Kitchen - item out of stock]
+Placed --> ConfirmedByKitchen : confirmOrder() [by Kitchen Staff]
+
+ConfirmedByKitchen --> InPreparation : startPreparation() [UC3]
+InPreparation --> ReadyForPickup : markOrderReady() [UC3]
+
+ReadyForPickup --> PickedUp : confirmPickup() [UC4 - by Shipper]
+PickedUp --> Delivered : confirmDelivery() [UC4 - customer receives & pays COD]
+PickedUp --> DeliveryFailed : reportDeliveryFailure(reason) [UC4]
+
+Cancelled --> [*]
+Rejected --> [*]
+Delivered --> [*]
+DeliveryFailed --> [*]
+@enduml

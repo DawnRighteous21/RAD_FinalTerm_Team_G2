@@ -1,0 +1,37 @@
+@startuml
+skinparam shadowing false
+autonumber
+actor "Customer" as Cust
+participant ":OFDHSystem" as Sys
+participant ":PaymentGateway" as PG
+
+Cust -> Sys : initiateCheckout(customerId, hubId, addressId)
+activate Sys
+Sys --> Cust : confirmHubCapacityAndDistance(isAvailable, deliveryFee)
+deactivate Sys
+
+loop For each selected item
+    Cust -> Sys : addItemToOrder(itemId, quantity, specialInstructions)
+    activate Sys
+    Sys --> Cust : displayRunningSubtotal(subtotalAmount)
+    deactivate Sys
+end
+
+opt Apply Discount Voucher (Max 1)
+    Cust -> Sys : applyVoucher(voucherCode)
+    activate Sys
+    Sys --> Cust : displayUpdatedPricing(subtotal, deliveryFee, discountAmount, totalAmount)
+    deactivate Sys
+end
+
+Cust -> Sys : confirmAndPlaceOrder(paymentMethod, paymentDetails)
+activate Sys
+alt paymentMethod == Online (VNPay / MoMo / Foreign Card)
+    Sys -> PG : authorizePayment(totalAmount, paymentDetails)
+    activate PG
+    PG --> Sys : paymentAuthorized(transactionRef)
+    deactivate PG
+end
+Sys --> Cust : displayOrderConfirmation(orderId, orderStatus="Placed", receiptSummary)
+deactivate Sys
+@enduml
