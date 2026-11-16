@@ -1,0 +1,34 @@
+@startuml
+skinparam shadowing false
+|Admin|
+start
+:Open Brand & Menu Management Console;
+|OFDH System|
+:Load and Display Existing Brands & Menu Items;
+|Admin|
+:Select CRUD Action (Create, Update, or Archive);
+if (Action Selected?) then (Create Brand / MenuItem)
+  :Input Name, EN/VI Descriptions, Unit Price & Hubs;
+  |OFDH System|
+  if (Valid Price > 0 & Unique Name?) then (Yes)
+    :Insert Brand / MenuItem (isActive = true);
+    :Link to Selected Hubs (HubMenuItem);
+  else (No)
+    :Display Validation Error;
+    stop
+  endif
+elseif (Action Selected?) then (Update Brand / MenuItem)
+  |Admin|
+  :Modify Price, Description, or Hub Assignment;
+  |OFDH System|
+  :Validate & Update Database Record;
+else (Delete / Archive Brand or MenuItem)
+  |Admin|
+  :Select Target Record & Confirm Deactivation;
+  |OFDH System|
+  :Set isActive = false (Archived State);
+  :Hide from Customer Menu Browsing;
+endif
+:Display Updated Catalog Confirmation;
+stop
+@enduml

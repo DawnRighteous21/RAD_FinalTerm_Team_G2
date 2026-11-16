@@ -1,0 +1,28 @@
+@startuml
+skinparam shadowing false
+autonumber
+actor "Admin" as Adm
+participant ":OFDHSystem" as Sys
+
+Adm -> Sys : getBrandAndMenuCatalog()
+activate Sys
+Sys --> Adm : displayCatalog(brandList, menuItemList)
+deactivate Sys
+
+alt Create New Brand or Menu Item
+    Adm -> Sys : createBrandOrMenuItem(brandId, itemName, descEn, descVi, unitPrice, assignedHubIds)
+    activate Sys
+    Sys --> Adm : confirmCreated(newId, isActive=true)
+    deactivate Sys
+else Update Existing Brand or Menu Item
+    Adm -> Sys : updateBrandOrMenuItem(targetId, updatedName, updatedDescEn, updatedDescVi, newPrice)
+    activate Sys
+    Sys --> Adm : confirmUpdated(targetId, lastUpdated)
+    deactivate Sys
+else Delete / Archive Brand or Menu Item
+    Adm -> Sys : archiveBrandOrMenuItem(targetId)
+    activate Sys
+    Sys --> Adm : confirmArchived(targetId, isActive=false)
+    deactivate Sys
+end
+@enduml

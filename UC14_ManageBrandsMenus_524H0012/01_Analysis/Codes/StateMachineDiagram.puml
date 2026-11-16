@@ -1,0 +1,16 @@
+@startuml
+skinparam shadowing false
+[*] --> DraftItem : Admin clicks "New Menu Item"
+
+DraftItem --> ActiveAvailable : createBrandOrMenuItem() [valid & price > 0]\n/ isActive = true, isAvailableInStock = true
+
+ActiveAvailable --> ActiveAvailable : updateBrandOrMenuItem()\n/ update price or EN/VI description
+ActiveAvailable --> TemporarilyOutOfStock : markHubItemUnavailable() [by Kitchen]\n/ isAvailableInStock = false
+TemporarilyOutOfStock --> ActiveAvailable : restockItem() [by Kitchen/Admin]\n/ isAvailableInStock = true
+
+ActiveAvailable --> ArchivedDiscontinued : archiveBrandOrMenuItem() [by Admin]\n/ isActive = false
+TemporarilyOutOfStock --> ArchivedDiscontinued : archiveBrandOrMenuItem() [by Admin]\n/ isActive = false
+
+ArchivedDiscontinued --> ActiveAvailable : reactivateItem() [by Admin]\n/ isActive = true
+ArchivedDiscontinued --> [*]
+@enduml
