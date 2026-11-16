@@ -1,0 +1,33 @@
+@startuml
+skinparam shadowing false
+autonumber
+actor "Kitchen Staff" as KS
+participant ":OFDHSystem" as Sys
+
+KS -> Sys : viewConfirmedOrderQueue(hubId)
+activate Sys
+Sys --> KS : displayOrderQueue(orderList)
+deactivate Sys
+
+KS -> Sys : selectOrderForPrep(orderId)
+activate Sys
+Sys --> KS : displayOrderItemsAndInstructions(orderId, itemDetails)
+deactivate Sys
+
+KS -> Sys : startPreparation(orderId, staffId)
+activate Sys
+Sys --> KS : confirmStateUpdated(orderId, orderStatus="InPreparation", prepStartedAt)
+deactivate Sys
+
+opt Ingredient Depleted Mid-Shift
+    KS -> Sys : markHubItemUnavailable(hubId, itemId)
+    activate Sys
+    Sys --> KS : confirmStockUpdated(hubId, itemId, isAvailableInStock=false)
+    deactivate Sys
+end
+
+KS -> Sys : markOrderReady(orderId, staffId)
+activate Sys
+Sys --> KS : confirmOrderReadyAndShipperAlerted(orderId, orderStatus="ReadyForPickup", readyAt)
+deactivate Sys
+@enduml

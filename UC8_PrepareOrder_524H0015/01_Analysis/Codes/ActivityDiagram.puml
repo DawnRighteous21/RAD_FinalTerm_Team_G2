@@ -1,0 +1,30 @@
+@startuml
+skinparam shadowing false
+|Kitchen Staff|
+start
+:Select Confirmed Order on Hub Display;
+|OFDH System|
+:Display Itemized Order Ticket & Brand Instructions;
+|Kitchen Staff|
+:Check Ingredients & Click "Start Preparation";
+if (All Ingredients Available?) then (No - Ran Out Mid-Order)
+  :Flag HubMenuItem as Out-of-Stock;
+  |OFDH System|
+  :Set HubMenuItem.isAvailableInStock = false;
+  :Cancel/Reject Order & Notify Customer/Office for Refund;
+  stop
+else (Yes)
+  |OFDH System|
+  :Update Order State = InPreparation;
+  :Record prepStartedAt Timestamp;
+  :Notify Customer Tracker ("Cooking in Progress");
+endif
+|Kitchen Staff|
+:Cook Food & Seal Virtual Brand Packaging;
+:Click "Mark Order Ready";
+|OFDH System|
+:Update Order State = ReadyForPickup;
+:Record readyAt Timestamp;
+:Broadcast Pickup Alert to Available Shippers;
+stop
+@enduml

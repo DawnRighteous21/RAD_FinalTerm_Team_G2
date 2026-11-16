@@ -1,0 +1,15 @@
+@startuml
+skinparam shadowing false
+[*] --> QuietCapacity : Hub Opens Shift\n[currentActiveOrders < 50% max]
+
+QuietCapacity --> NormalCapacity : startPreparation() / newOrder()\n[50% <= activeOrders < maxActiveOrders]
+NormalCapacity --> QuietCapacity : markOrderReady() / orderDelivered()\n[activeOrders < 50% max]
+
+NormalCapacity --> OverloadedBusyRule : newOrder()\n[currentActiveOrders == maxActiveOrders]
+OverloadedBusyRule : entry / blockNewOrders()\ndo / offerQuietHubIncentive()
+
+OverloadedBusyRule --> NormalCapacity : markOrderReady(orderId)\n[activeOrders drops below maxActiveOrders]
+
+NormalCapacity --> [*] : Hub Closes Shift
+QuietCapacity --> [*] : Hub Closes Shift
+@enduml
