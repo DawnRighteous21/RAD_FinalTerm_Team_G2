@@ -1,0 +1,98 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 3.6.4 Detailed Sequence Diagram - UC6: Produce Management Reports (Author: 524H0015)
+
+actor "Manager" as Mgr
+boundary ":ManagementReportView" as View
+control ":ReportingController" as Ctrl
+entity ":HubDAO" as HDAO
+entity "rpt:ManagementReport" as DomRpt
+entity ":OrderAnalyticsDAO" as OADAO
+entity ":ReportDAO" as RDAO
+
+Mgr -> View : openDashboardClick()
+activate View
+View -> Ctrl : getFilterOptions()
+activate Ctrl
+Ctrl -> HDAO : findAllHubs()
+activate HDAO
+HDAO --> Ctrl : hubList
+deactivate HDAO
+Ctrl --> View : filterMap(reportTypes, hubList)
+deactivate Ctrl
+View --> Mgr : displayFilterOptions(filterMap)
+deactivate View
+
+Mgr -> View : generateReportClick(type, startDate, endDate, hubId, brandId)
+activate View
+View -> Ctrl : generateReport(type, startDate, endDate, hubId, brandId)
+activate Ctrl
+
+create DomRpt
+Ctrl -> DomRpt : <<create>>(type, startDate, endDate)
+activate DomRpt
+DomRpt -> DomRpt : validateDateRange()
+DomRpt --> Ctrl : true (startDate <= endDate)
+deactivate DomRpt
+
+Ctrl -> OADAO : findOrdersByCriteria(startDate, endDate, hubId, brandId)
+activate OADAO
+OADAO --> Ctrl : matchingOrders
+deactivate OADAO
+
+Ctrl -> HDAO : findAllHubs()
+activate HDAO
+HDAO --> Ctrl : hubList
+deactivate HDAO
+
+Ctrl -> DomRpt : computeKPIs(matchingOrders, hubList)
+activate DomRpt
+DomRpt --> Ctrl : metricsComputed(totalRevenue, totalOrders, avgDeliveryTimeMins, peakHubUtilizationPct)
+deactivate DomRpt
+
+Ctrl -> RDAO : saveReportSnapshot(rpt)
+activate RDAO
+RDAO --> Ctrl : true
+deactivate RDAO
+
+Ctrl --> View : rpt (status="Generated")
+deactivate Ctrl
+View --> Mgr : renderReportCharts(rpt)
+deactivate View
+
+opt Export PDF/CSV or Archive Report Snapshot
+    Mgr -> View : exportOrArchiveClick(reportId, actionFormat)
+    activate View
+    View -> Ctrl : exportOrArchiveReport(reportId, actionFormat)
+    activate Ctrl
+    Ctrl -> RDAO : findById(reportId)
+    activate RDAO
+    RDAO --> Ctrl : rpt
+    deactivate RDAO
+
+    alt actionFormat == "PDF" or "CSV"
+        Ctrl -> DomRpt : markExported(actionFormat)
+        activate DomRpt
+        DomRpt --> Ctrl : exportFileUrl (status="Exported")
+        deactivate DomRpt
+        Ctrl -> RDAO : updateReportStatus(reportId, "Exported")
+        activate RDAO
+        RDAO --> Ctrl : true
+        deactivate RDAO
+    else actionFormat == "ARCHIVE"
+        Ctrl -> DomRpt : markArchived()
+        activate DomRpt
+        DomRpt --> Ctrl : status="Archived"
+        deactivate DomRpt
+        Ctrl -> RDAO : updateReportStatus(reportId, "Archived")
+        activate RDAO
+        RDAO --> Ctrl : true
+        deactivate RDAO
+    end
+    Ctrl --> View : resultStatusOrUrl
+    deactivate Ctrl
+    View --> Mgr : showConfirmation(resultStatusOrUrl)
+    deactivate View
+end
+@enduml
