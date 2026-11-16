@@ -1,0 +1,35 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Customer" as Cust
+actor "Local Customer" as LocalCust
+actor "Foreign Tourist" as TouristCust
+actor "Kitchen Staff" as Kitchen
+actor "Shipper" as Shipper
+actor "Admin" as Admin
+actor "Manager" as Manager
+actor "Payment Gateway\n<<External System>>" as PG
+
+Cust <|-- LocalCust
+Cust <|-- TouristCust
+
+rectangle "Online Food Delivery Hub Platform (OFDH) - Team G2" {
+    usecase "UC1: Register customer and\nmanage addresses\n(Owner: 524H0134)" as UC1
+    usecase "UC2: Place an order\n(Owner: 524H0012)" as UC2
+    usecase "UC3: Prepare an order and\nmark it ready\n(Owner: 524H0015)" as UC3
+    usecase "UC4: Deliver an order\n(Owner: 524H0134)" as UC4
+    usecase "UC5: Manage brands and\nmenu items\n(Owner: 524H0012)" as UC5
+    usecase "UC6: Produce management\nreports\n(Owner: 524H0015)" as UC6
+}
+
+Cust --> UC1
+Cust --> UC2
+UC2 --> PG : <<uses>>
+
+Kitchen --> UC3
+Shipper --> UC4
+Admin --> UC5
+Manager --> UC6
+@enduml

@@ -1,0 +1,144 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+abstract class Customer {
+  - customerId: String
+  - fullName: String
+  - email: String
+  - status: String
+  - createdAt: DateTime
+}
+
+class LocalCustomer {
+  - vnPhoneNumber: String
+  - preferredLocalWallet: String
+}
+
+class ForeignTourist {
+  - passportNumber: String
+  - nationality: String
+  - hotelName: String
+  - roomNumber: String
+}
+
+class DeliveryAddress {
+  - addressId: String
+  - recipientName: String
+  - streetAddress: String
+  - district: String
+  - landmarkOrHotel: String
+  - distanceKmFromHub: Decimal
+  - isDefault: Boolean
+}
+
+class Hub {
+  - hubId: String
+  - hubName: String
+  - district: String
+  - maxActiveOrders: Integer
+  - currentActiveOrders: Integer
+  - maxDeliveryDistanceKm: Decimal
+  - hubStatus: String
+}
+
+class Brand {
+  - brandId: String
+  - brandName: String
+  - cuisineType: String
+  - description: String
+  - isActive: Boolean
+}
+
+class MenuItem {
+  - itemId: String
+  - itemName: String
+  - descriptionEn: String
+  - descriptionVi: String
+  - unitPrice: Decimal
+  - category: String
+  - isActive: Boolean
+}
+
+class HubMenuItem {
+  - isAvailableInStock: Boolean
+  - dailyPrepLimit: Integer
+  - lastUpdated: DateTime
+}
+
+class Order {
+  - orderId: String
+  - orderDateTime: DateTime
+  - orderStatus: String
+  - subtotalAmount: Decimal
+  - deliveryFee: Decimal
+  - discountAmount: Decimal
+  - totalAmount: Decimal
+  - paymentMethod: String
+  - paymentStatus: String
+  - prepStartedAt: DateTime
+  - readyAt: DateTime
+  - deliveredAt: DateTime
+  - failureReason: String
+}
+
+class OrderItem {
+  - orderItemId: String
+  - quantity: Integer
+  - unitPriceAtOrder: Decimal
+  - lineTotal: Decimal
+  - specialInstructions: String
+}
+
+class Voucher {
+  - voucherCode: String
+  - discountPercentage: Decimal
+  - maxDiscountAmount: Decimal
+  - minOrderValue: Decimal
+  - validFrom: Date
+  - validUntil: Date
+  - isActive: Boolean
+}
+
+class Shipper {
+  - shipperId: String
+  - fullName: String
+  - phoneNumber: String
+  - vehiclePlate: String
+  - availabilityStatus: String
+  - cashOnHand: Decimal
+}
+
+class ManagementReport {
+  - reportId: String
+  - reportType: String
+  - startDate: Date
+  - endDate: Date
+  - generatedAt: DateTime
+  - totalRevenue: Decimal
+  - totalOrders: Integer
+  - avgDeliveryTimeMins: Decimal
+}
+
+' Generalization
+Customer <|-- LocalCustomer
+Customer <|-- ForeignTourist
+
+' Whole-Part Composition & Aggregation
+Customer "1" *-- "1..*" DeliveryAddress : owns >
+Order "1" *-- "1..*" OrderItem : contains >
+Brand "1" o-- "1..*" MenuItem : offers >
+
+' Associations & Association Class
+Hub "1..*" -- "1..*" Brand : cooks for >
+Hub "1..*" -- "1..*" MenuItem : stocks >
+(Hub, MenuItem) .. HubMenuItem
+
+Customer "1" -- "0..*" Order : places >
+DeliveryAddress "1" -- "0..*" Order : destination for >
+Hub "1" -- "0..*" Order : fulfils >
+OrderItem "*" -- "1" MenuItem : refers to >
+Voucher "0..1" -- "0..*" Order : applied to >
+Shipper "0..1" -- "0..*" Order : delivers >
+Hub "1..*" -- "0..*" ManagementReport : summarized in >
+@enduml
