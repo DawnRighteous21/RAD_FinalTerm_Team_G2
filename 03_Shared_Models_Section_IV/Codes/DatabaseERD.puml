@@ -1,0 +1,172 @@
+@startuml
+skinparam shadowing false
+skinparam linetype ortho
+hide circle
+title 4.3.1 Entity Relationship Diagram (SQLite) - SaigonBite OFDH (Author: 524H0134)
+
+entity "Customers" as cust {
+  * customer_id : TEXT <<PK>>
+  --
+  * customer_type : TEXT
+  * full_name : TEXT
+  * email : TEXT <<UQ>>
+  * status : TEXT
+  * created_at : TEXT
+  vn_phone_number : TEXT <<UQ, NULL>>
+  preferred_local_wallet : TEXT
+  passport_number : TEXT <<UQ, NULL>>
+  nationality : TEXT
+  hotel_name : TEXT
+  room_number : TEXT
+}
+
+entity "DeliveryAddresses" as addr {
+  * address_id : TEXT <<PK>>
+  --
+  * customer_id : TEXT <<FK>>
+  * recipient_name : TEXT
+  * street_address : TEXT
+  * district : TEXT
+  landmark_or_hotel : TEXT
+  * distance_km_from_hub : REAL
+  * is_default : INTEGER
+  * status : TEXT
+}
+
+entity "Hubs" as hub {
+  * hub_id : TEXT <<PK>>
+  --
+  * hub_name : TEXT
+  * district : TEXT
+  * max_active_orders : INTEGER
+  * current_active_orders : INTEGER
+  * max_delivery_distance_km : REAL
+  * hub_status : TEXT
+}
+
+entity "Brands" as brand {
+  * brand_id : TEXT <<PK>>
+  --
+  * brand_name : TEXT <<UQ>>
+  * cuisine_type : TEXT
+  description : TEXT
+  * is_active : INTEGER
+}
+
+entity "HubBrands" as hbrand {
+  * hub_id : TEXT <<PK, FK>>
+  * brand_id : TEXT <<PK, FK>>
+}
+
+entity "MenuItems" as item {
+  * item_id : TEXT <<PK>>
+  --
+  * brand_id : TEXT <<FK>>
+  * item_name : TEXT
+  description_en : TEXT
+  description_vi : TEXT
+  * unit_price : REAL
+  * category : TEXT
+  * is_active : INTEGER
+}
+
+entity "HubMenuItems" as hitem {
+  * hub_id : TEXT <<PK, FK>>
+  * item_id : TEXT <<PK, FK>>
+  --
+  * is_available_in_stock : INTEGER
+  * daily_prep_limit : INTEGER
+  * last_updated : TEXT
+}
+
+entity "Vouchers" as vch {
+  * voucher_code : TEXT <<PK>>
+  --
+  * discount_percentage : REAL
+  * max_discount_amount : REAL
+  * min_order_value : REAL
+  * valid_from : TEXT
+  * valid_until : TEXT
+  * is_active : INTEGER
+}
+
+entity "Shippers" as ship {
+  * shipper_id : TEXT <<PK>>
+  --
+  * full_name : TEXT
+  * phone_number : TEXT <<UQ>>
+  * vehicle_plate : TEXT
+  * availability_status : TEXT
+  * cash_on_hand : REAL
+}
+
+entity "Orders" as ord {
+  * order_id : TEXT <<PK>>
+  --
+  * customer_id : TEXT <<FK>>
+  * hub_id : TEXT <<FK>>
+  * address_id : TEXT <<FK>>
+  voucher_code : TEXT <<FK, NULL>>
+  shipper_id : TEXT <<FK, NULL>>
+  * order_date_time : TEXT
+  * order_status : TEXT
+  * subtotal_amount : REAL
+  * delivery_fee : REAL
+  * discount_amount : REAL
+  * total_amount : REAL
+  * payment_method : TEXT
+  * payment_status : TEXT
+  prep_started_at : TEXT
+  ready_at : TEXT
+  delivered_at : TEXT
+  failure_reason : TEXT
+}
+
+entity "OrderItems" as oitem {
+  * order_item_id : TEXT <<PK>>
+  --
+  * order_id : TEXT <<FK>>
+  * item_id : TEXT <<FK>>
+  * quantity : INTEGER
+  * unit_price_at_order : REAL
+  * line_total : REAL
+  special_instructions : TEXT
+}
+
+entity "ManagementReports" as rpt {
+  * report_id : TEXT <<PK>>
+  --
+  * report_type : TEXT
+  * start_date : TEXT
+  * end_date : TEXT
+  * generated_at : TEXT
+  * total_revenue : REAL
+  * total_orders : INTEGER
+  * avg_delivery_time_mins : REAL
+  * peak_hub_utilization_pct : REAL
+  * status : TEXT
+}
+
+entity "ReportHubs" as rhub {
+  * report_id : TEXT <<PK, FK>>
+  * hub_id : TEXT <<PK, FK>>
+}
+
+cust ||--|{ addr : owns
+cust ||--o{ ord : places
+addr ||--o{ ord : destination_for
+hub ||--o{ ord : fulfils
+vch |o--o{ ord : applied_to
+ship |o--o{ ord : delivers
+ord ||--|{ oitem : contains
+item ||--o{ oitem : refers_to
+
+brand ||--|{ item : offers
+hub ||--|{ hbrand
+brand ||--|{ hbrand
+hub ||--|{ hitem
+item ||--|{ hitem
+
+rpt ||--|{ rhub
+hub ||--o{ rhub
+@enduml
