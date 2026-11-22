@@ -1,0 +1,249 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam nodesep 14
+skinparam ranksep 35
+hide empty members
+title 4.1 Subsystem Design Class Diagram - SaigonBite OFDH (Team G2)
+
+package "UI (View) Layer [WPF]" {
+    class RegistrationAddressView <<524H0134>> {
+        + displayRegistrationForm()
+        + submitRegistrationClick()
+        + submitAddressClick()
+    }
+    class OrderCheckoutView <<524H0012>> {
+        + initiateCheckoutClick()
+        + addItemClick()
+        + applyVoucherClick()
+        + confirmOrderClick()
+    }
+    class KitchenDisplayView <<524H0015>> {
+        + loadQueueClick()
+        + startPrepClick()
+        + markItemOutOfStockClick()
+        + markReadyClick()
+    }
+    class ShipperDeliveryView <<524H0134>> {
+        + acceptTaskClick()
+        + confirmPickupClick()
+        + confirmCashCollectedClick()
+        + confirmDeliveryClick()
+        + reportFailureClick()
+    }
+    class BrandMenuAdminView <<524H0012>> {
+        + openCatalogConsole()
+        + createMenuItemClick()
+        + updateMenuItemClick()
+        + archiveBrandOrItemClick()
+    }
+    class ManagementReportView <<524H0015>> {
+        + openDashboardClick()
+        + generateReportClick()
+        + exportOrArchiveClick()
+    }
+}
+
+package "Controller Layer" {
+    class CustomerRegistrationController <<524H0134>> {
+        + registerCustomer(): String
+        + addDeliveryAddress(): DeliveryAddress
+        + updateOrArchiveAddress(): Boolean
+    }
+    class PlaceOrderController <<524H0012>> {
+        + initiateCheckout(): Boolean
+        + addItemToOrder(): Decimal
+        + applyVoucher(): Order
+        + confirmAndPlaceOrder(): Order
+    }
+    class KitchenPrepController <<524H0015>> {
+        + getConfirmedOrderQueue(): List<Order>
+        + startPreparation(): Order
+        + markHubItemUnavailable(): Boolean
+        + markOrderReady(): Order
+    }
+    class DeliveryFulfilmentController <<524H0134>> {
+        + acceptDeliveryTask(): Order
+        + confirmOrderPickup(): Boolean
+        + confirmCashCollected(): Decimal
+        + confirmDeliverySuccess(): Order
+        + reportDeliveryFailure(): Order
+    }
+    class CatalogAdminController <<524H0012>> {
+        + loadCatalog(): Map
+        + createMenuItem(): MenuItem
+        + updateMenuItem(): MenuItem
+        + archiveCatalogEntity(): Boolean
+    }
+    class ReportingController <<524H0015>> {
+        + getFilterOptions(): Map
+        + generateReport(): ManagementReport
+        + exportOrArchiveReport(): String
+    }
+}
+
+package "Domain Layer" {
+    abstract class Customer {
+        # customerId: String
+        # fullName: String
+        # email: String
+        # status: String
+        + validateCredentials(): Boolean
+    }
+    class LocalCustomer {
+        - vnPhoneNumber: String
+        - preferredLocalWallet: String
+    }
+    class ForeignTourist {
+        - passportNumber: String
+        - nationality: String
+        - hotelName: String
+    }
+    class DeliveryAddress {
+        - addressId: String
+        - distanceKmFromHub: Decimal
+        - status: String
+        + verifyRange(): Boolean
+    }
+    class Order {
+        - orderId: String
+        - orderStatus: String
+        - totalAmount: Decimal
+        - paymentMethod: String
+        + calculateTotalAmount(): Decimal
+        + startPreparation(): Boolean
+        + markOrderReady(): Boolean
+        + markDelivered(): void
+    }
+    class OrderItem {
+        - orderItemId: String
+        - quantity: Integer
+        - lineTotal: Decimal
+    }
+    class Voucher {
+        - voucherCode: String
+        - discountPercentage: Decimal
+        + isValidForOrder(): Boolean
+    }
+    class Shipper {
+        - shipperId: String
+        - availabilityStatus: String
+        - cashOnHand: Decimal
+        + addCollectedCash(): Decimal
+    }
+    class Hub {
+        - hubId: String
+        - maxActiveOrders: Integer
+        - currentActiveOrders: Integer
+        + canAcceptNewOrder(): Boolean
+        + getUtilizationPercentage(): Decimal
+    }
+    class Brand {
+        - brandId: String
+        - brandName: String
+        - isActive: Boolean
+    }
+    class MenuItem {
+        - itemId: String
+        - itemName: String
+        - unitPrice: Decimal
+        - isActive: Boolean
+    }
+    class HubMenuItem {
+        - isAvailableInStock: Boolean
+        - dailyPrepLimit: Integer
+        + markOutOfStock(): void
+    }
+    class ManagementReport {
+        - reportId: String
+        - totalRevenue: Decimal
+        - totalOrders: Integer
+        + computeKPIs(): void
+    }
+}
+
+package "Data Access & External Adapters [SQLite]" {
+    class CustomerDAO
+    class DeliveryAddressDAO
+    class HubDAO
+    class OrderDAO
+    class VoucherDAO
+    class BrandDAO
+    class MenuItemDAO
+    class HubMenuItemDAO
+    class ShipperDAO
+    class OrderAnalyticsDAO
+    class ReportDAO
+    class PaymentGatewayAdapter
+    class ShipperNotificationService
+    class DatabaseConnection {
+        + getConnection(): SqliteConnection
+        + initializeSchema(): void
+    }
+
+    CustomerDAO -[hidden]down-> VoucherDAO
+    DeliveryAddressDAO -[hidden]down-> BrandDAO
+    HubDAO -[hidden]down-> MenuItemDAO
+    OrderDAO -[hidden]down-> HubMenuItemDAO
+
+    VoucherDAO -[hidden]down-> ShipperDAO
+    BrandDAO -[hidden]down-> OrderAnalyticsDAO
+    MenuItemDAO -[hidden]down-> ReportDAO
+    HubMenuItemDAO -[hidden]down-> PaymentGatewayAdapter
+
+    ShipperDAO -[hidden]down-> ShipperNotificationService
+    OrderAnalyticsDAO -[hidden]down-> DatabaseConnection
+    ReportDAO -[hidden]down-> DatabaseConnection
+}
+
+' UI -> Controller
+RegistrationAddressView --> CustomerRegistrationController
+OrderCheckoutView --> PlaceOrderController
+KitchenDisplayView --> KitchenPrepController
+ShipperDeliveryView --> DeliveryFulfilmentController
+BrandMenuAdminView --> CatalogAdminController
+ManagementReportView --> ReportingController
+
+' Controller -> Domain (pulls Domain cleanly below Controllers)
+CustomerRegistrationController ..> Customer
+CustomerRegistrationController ..> DeliveryAddress
+PlaceOrderController ..> Order
+PlaceOrderController ..> Voucher
+KitchenPrepController ..> Order
+KitchenPrepController ..> HubMenuItem
+DeliveryFulfilmentController ..> Order
+DeliveryFulfilmentController ..> Shipper
+CatalogAdminController ..> Brand
+CatalogAdminController ..> MenuItem
+ReportingController ..> ManagementReport
+ReportingController ..> Hub
+
+' Controller -> Data Access
+CustomerRegistrationController --> CustomerDAO
+CustomerRegistrationController --> DeliveryAddressDAO
+CustomerRegistrationController --> HubDAO
+PlaceOrderController --> OrderDAO
+PlaceOrderController --> VoucherDAO
+PlaceOrderController --> PaymentGatewayAdapter
+KitchenPrepController --> OrderDAO
+KitchenPrepController --> HubMenuItemDAO
+KitchenPrepController --> ShipperNotificationService
+DeliveryFulfilmentController --> ShipperDAO
+CatalogAdminController --> BrandDAO
+CatalogAdminController --> MenuItemDAO
+ReportingController --> OrderAnalyticsDAO
+ReportingController --> ReportDAO
+
+' Domain Associations
+Customer <|-- LocalCustomer
+Customer <|-- ForeignTourist
+Customer "1" *-- "1..*" DeliveryAddress
+Order "1" *-- "1..*" OrderItem
+Order "0..*" -- "0..1" Voucher
+Shipper "0..1" -- "0..*" Order
+Hub "1" -- "0..*" Order
+Brand "1" o-- "1..*" MenuItem
+Hub "1" -- "1..*" HubMenuItem
+MenuItem "1" -- "1..*" HubMenuItem
+Hub "1..*" -- "0..*" ManagementReport
+@enduml

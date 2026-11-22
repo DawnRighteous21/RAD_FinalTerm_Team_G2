@@ -1,0 +1,75 @@
+@startuml
+skinparam shadowing false
+skinparam packageStyle folder
+title 4.2 Package Diagram - SaigonBite OFDH Subsystem (C# WPF + SQLite)
+
+package "SaigonBite.OFDH" {
+
+    package "Views (UI Layer - WPF XAML)" as Views {
+        [MainWindow]
+        [RegistrationAddressView (UC1)]
+        [OrderCheckoutView (UC3)]
+        [KitchenDisplayView (UC8)]
+        [ShipperDeliveryView (UC10)]
+        [BrandMenuAdminView (UC14)]
+        [ManagementReportView (UC16)]
+    }
+
+    package "Controllers (Application Layer)" as Controllers {
+        [CustomerRegistrationController]
+        [PlaceOrderController]
+        [KitchenPrepController]
+        [DeliveryFulfilmentController]
+        [CatalogAdminController]
+        [ReportingController]
+    }
+
+    package "Domain (Business Entities Layer)" as Domain {
+        package "CustomerManagement" {
+            [Customer / LocalCustomer / ForeignTourist]
+            [DeliveryAddress]
+        }
+        package "OrderAndFulfilment" {
+            [Order / OrderItem]
+            [Voucher]
+            [Shipper]
+        }
+        package "CatalogAndHubs" {
+            [Hub / HubMenuItem]
+            [Brand / MenuItem]
+        }
+        package "Analytics" {
+            [ManagementReport]
+        }
+    }
+
+    package "DataAccess (Persistence & Adapters)" as DataAccess {
+        [DatabaseConnection]
+        [CustomerDAO / DeliveryAddressDAO]
+        [OrderDAO / VoucherDAO / ShipperDAO]
+        [HubDAO / BrandDAO / MenuItemDAO / HubMenuItemDAO]
+        [OrderAnalyticsDAO / ReportDAO]
+        [PaymentGatewayAdapter (Mock)]
+        [ShipperNotificationService (Mock)]
+    }
+
+    package "Tests (Verification)" as Tests {
+        [PostConditionTestSuite (T-01..T-24)]
+    }
+}
+
+package "External Infrastructure" {
+    database "SQLite\n(saigonbite.db)" as SQLiteDB
+    [Microsoft.Data.Sqlite] as SqliteLib
+}
+
+Views ..> Controllers : <<use>>
+Views ..> Domain : <<bind DTO/Entity>>
+Controllers ..> Domain : <<create / invoke>>
+Controllers ..> DataAccess : <<persist / query>>
+DataAccess ..> Domain : <<map rows>>
+DataAccess ..> SqliteLib : <<use>>
+SqliteLib --> SQLiteDB : <<SQL read/write>>
+Tests ..> Controllers : <<verify post-conditions>>
+Tests ..> DataAccess : <<seed / reset DB>>
+@enduml
