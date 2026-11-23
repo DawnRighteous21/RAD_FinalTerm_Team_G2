@@ -1,0 +1,137 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 4.3.2 Modified Sequence Diagram (with SQLite) - UC2/UC3: Place an Order (Author: 524H0012)
+
+actor "Customer" as Cust
+boundary ":OrderCheckoutView" as View
+control ":PlaceOrderController" as Ctrl
+entity ":HubDAO" as HDAO
+entity "hub:Hub" as DomHub
+entity "ord:Order" as DomOrd
+entity ":VoucherDAO" as VDAO
+control ":PaymentGatewayAdapter" as PG
+entity ":OrderDAO" as ODAO
+database ":SQLiteDB" as DB
+
+Cust -> View : initiateCheckoutClick(customerId, hubId, addressId)
+activate View
+View -> Ctrl : initiateCheckout(customerId, hubId, addressId)
+activate Ctrl
+
+Ctrl -> HDAO : findById(hubId)
+activate HDAO
+HDAO -> DB : SELECT * FROM Hubs\nWHERE hub_id=@hubId
+activate DB
+DB --> HDAO : hubRow
+deactivate DB
+HDAO --> Ctrl : hub
+deactivate HDAO
+
+Ctrl -> DomHub : canAcceptNewOrder()
+activate DomHub
+DomHub --> Ctrl : true (active < max)
+deactivate DomHub
+
+create DomOrd
+Ctrl -> DomOrd : <<create>>(customerId, hubId, addressId)
+activate DomOrd
+DomOrd -> DomOrd : calculateDeliveryFee(distanceKm)
+DomOrd --> Ctrl : deliveryFee
+deactivate DomOrd
+Ctrl --> View : true (deliveryFee)
+deactivate Ctrl
+View --> Cust : displayCartReady(deliveryFee)
+deactivate View
+
+loop For each selected MenuItem
+    Cust -> View : addItemClick(itemId, qty, note)
+    activate View
+    View -> Ctrl : addItemToOrder(itemId, qty, note)
+    activate Ctrl
+    Ctrl -> HDAO : checkItemStockAtHub(hubId, itemId)
+    activate HDAO
+    HDAO -> DB : SELECT hmi.*, m.unit_price FROM HubMenuItems hmi\nJOIN MenuItems m ON hmi.item_id=m.item_id\nWHERE hmi.hub_id=@hubId AND hmi.item_id=@itemId
+    activate DB
+    DB --> HDAO : stockRow (inStock=1)
+    deactivate DB
+    HDAO --> Ctrl : hubMenuItem
+    deactivate HDAO
+
+    Ctrl -> DomOrd : addOrderItem(menuItem, qty, note)
+    activate DomOrd
+    DomOrd --> Ctrl : subtotalAmount
+    deactivate DomOrd
+    Ctrl --> View : subtotalAmount
+    deactivate Ctrl
+    View --> Cust : displayRunningSubtotal(subtotalAmount)
+    deactivate View
+end
+
+opt Apply Discount Voucher (Max 1)
+    Cust -> View : applyVoucherClick(voucherCode)
+    activate View
+    View -> Ctrl : applyVoucher(voucherCode)
+    activate Ctrl
+    Ctrl -> VDAO : findByCode(voucherCode)
+    activate VDAO
+    VDAO -> DB : SELECT * FROM Vouchers\nWHERE voucher_code=@code AND is_active=1
+    activate DB
+    DB --> VDAO : voucherRow
+    deactivate DB
+    VDAO --> Ctrl : vch
+    deactivate VDAO
+
+    Ctrl -> DomOrd : applySingleVoucher(vch) & calculateTotalAmount()
+    activate DomOrd
+    DomOrd --> Ctrl : updatedOrderPricing
+    deactivate DomOrd
+    Ctrl --> View : updatedOrderPricing
+    deactivate Ctrl
+    View --> Cust : displayPriceSummary(subtotal, fee, discount, total)
+    deactivate View
+end
+
+Cust -> View : confirmOrderClick(paymentMethod, paymentDetails)
+activate View
+View -> Ctrl : confirmAndPlaceOrder(paymentMethod, paymentDetails)
+activate Ctrl
+
+alt paymentMethod == "ONLINE" (MoMo / VNPay / Card)
+    Ctrl -> PG : authorizePayment(totalAmount, paymentMethod, paymentDetails)
+    activate PG
+    PG --> Ctrl : transactionRef (Paid)
+    deactivate PG
+    Ctrl -> DomOrd : markPlaced("Paid")
+else paymentMethod == "COD"
+    Ctrl -> DomOrd : markPlaced("PendingCOD")
+end
+
+Ctrl -> ODAO : saveOrderWithItems(ord)
+activate ODAO
+ODAO -> DB : BEGIN TRANSACTION;\nINSERT INTO Orders (...) VALUES (...);\nINSERT INTO OrderItems (...) VALUES (...);\nCOMMIT;
+activate DB
+DB --> ODAO : rows committed
+deactivate DB
+ODAO --> Ctrl : true
+deactivate ODAO
+
+Ctrl -> DomHub : incrementActiveOrders()
+activate DomHub
+DomHub --> Ctrl : newActiveCount
+deactivate DomHub
+
+Ctrl -> HDAO : updateActiveOrderCount(hubId, newActiveCount)
+activate HDAO
+HDAO -> DB : UPDATE Hubs SET current_active_orders=@cnt,\nhub_status=@status WHERE hub_id=@hubId
+activate DB
+DB --> HDAO : 1 row affected
+deactivate DB
+HDAO --> Ctrl : true
+deactivate HDAO
+
+Ctrl --> View : ord (status="Placed")
+deactivate Ctrl
+View --> Cust : displayOrderConfirmation(orderId, receiptSummary)
+deactivate View
+@enduml

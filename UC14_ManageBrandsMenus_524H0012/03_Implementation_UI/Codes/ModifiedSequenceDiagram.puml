@@ -1,0 +1,157 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 4.3.2 Modified Sequence Diagram (with SQLite) - UC5/UC14: Manage Brands & Menu Items (Author: 524H0012)
+
+actor "Admin" as Adm
+boundary ":BrandMenuAdminView" as View
+control ":CatalogAdminController" as Ctrl
+entity ":BrandDAO" as BDAO
+entity ":MenuItemDAO" as MDAO
+entity "item:MenuItem" as DomItem
+entity ":HubMenuItemDAO" as HMDAO
+database ":SQLiteDB" as DB
+
+Adm -> View : openCatalogConsole()
+activate View
+View -> Ctrl : loadCatalog()
+activate Ctrl
+
+Ctrl -> BDAO : findAllBrands()
+activate BDAO
+BDAO -> DB : SELECT * FROM Brands ORDER BY brand_name
+activate DB
+DB --> BDAO : brandRows
+deactivate DB
+BDAO --> Ctrl : brandList
+deactivate BDAO
+
+Ctrl -> MDAO : findAllMenuItems()
+activate MDAO
+MDAO -> DB : SELECT * FROM MenuItems ORDER BY brand_id, item_name
+activate DB
+DB --> MDAO : itemRows
+deactivate DB
+MDAO --> Ctrl : itemList
+deactivate MDAO
+
+Ctrl --> View : catalogMap(brandList, itemList)
+deactivate Ctrl
+View --> Adm : renderCatalog(brandList, itemList)
+deactivate View
+
+alt Create New Bilingual Menu Item
+    Adm -> View : createMenuItemClick(brandId, name, descEn, descVi, price, hubIds)
+    activate View
+    View -> Ctrl : createMenuItem(brandId, name, descEn, descVi, price, hubIds)
+    activate Ctrl
+
+    Ctrl -> MDAO : existsByNameInBrand(brandId, name)
+    activate MDAO
+    MDAO -> DB : SELECT COUNT(*) FROM MenuItems\nWHERE brand_id=@brandId AND item_name=@name
+    activate DB
+    DB --> MDAO : 0 (unique)
+    deactivate DB
+    MDAO --> Ctrl : false
+    deactivate MDAO
+
+    create DomItem
+    Ctrl -> DomItem : <<create>>(brandId, name, descEn, descVi, price)
+    activate DomItem
+    DomItem -> DomItem : validateItemData() [price > 0]
+    DomItem --> Ctrl : item (isActive=true)
+    deactivate DomItem
+
+    Ctrl -> MDAO : insertMenuItem(item)
+    activate MDAO
+    MDAO -> DB : INSERT INTO MenuItems\n(item_id, brand_id, item_name, description_en,\ndescription_vi, unit_price, category, is_active)
+    activate DB
+    DB --> MDAO : 1 row affected
+    deactivate DB
+    MDAO --> Ctrl : true
+    deactivate MDAO
+
+    Ctrl -> HMDAO : assignItemToHubs(item.itemId, hubIds)
+    activate HMDAO
+    HMDAO -> DB : INSERT OR REPLACE INTO HubMenuItems\n(hub_id, item_id, is_available_in_stock, daily_prep_limit)
+    activate DB
+    DB --> HMDAO : rows inserted
+    deactivate DB
+    HMDAO --> Ctrl : true
+    deactivate HMDAO
+
+    Ctrl --> View : item
+    deactivate Ctrl
+    View --> Adm : showConfirmation("Menu Item Created: " + item.itemId)
+    deactivate View
+
+else Update Existing Menu Item
+    Adm -> View : updateMenuItemClick(itemId, name, descEn, descVi, newPrice)
+    activate View
+    View -> Ctrl : updateMenuItem(itemId, name, descEn, descVi, newPrice)
+    activate Ctrl
+
+    Ctrl -> MDAO : findById(itemId)
+    activate MDAO
+    MDAO -> DB : SELECT * FROM MenuItems WHERE item_id=@itemId
+    activate DB
+    DB --> MDAO : itemRow
+    deactivate DB
+    MDAO --> Ctrl : item
+    deactivate MDAO
+
+    Ctrl -> DomItem : updateDetails(name, descEn, descVi, newPrice)
+    activate DomItem
+    DomItem -> DomItem : validateItemData()
+    DomItem --> Ctrl : true
+    deactivate DomItem
+
+    Ctrl -> MDAO : updateMenuItem(item)
+    activate MDAO
+    MDAO -> DB : UPDATE MenuItems SET item_name=@name, description_en=@en,\ndescription_vi=@vi, unit_price=@price WHERE item_id=@itemId
+    activate DB
+    DB --> MDAO : 1 row affected
+    deactivate DB
+    MDAO --> Ctrl : true
+    deactivate MDAO
+
+    Ctrl --> View : item
+    deactivate Ctrl
+    View --> Adm : showConfirmation("Menu Item Updated")
+    deactivate View
+
+else Archive (Soft-Delete) Menu Item
+    Adm -> View : archiveBrandOrItemClick(itemId, "MenuItem")
+    activate View
+    View -> Ctrl : archiveCatalogEntity(itemId, "MenuItem")
+    activate Ctrl
+
+    Ctrl -> MDAO : findById(itemId)
+    activate MDAO
+    MDAO -> DB : SELECT * FROM MenuItems WHERE item_id=@itemId
+    activate DB
+    DB --> MDAO : itemRow
+    deactivate DB
+    MDAO --> Ctrl : item
+    deactivate MDAO
+
+    Ctrl -> DomItem : archiveItem()
+    activate DomItem
+    DomItem --> Ctrl : isActive=false
+    deactivate DomItem
+
+    Ctrl -> MDAO : archiveMenuItem(itemId)
+    activate MDAO
+    MDAO -> DB : UPDATE MenuItems SET is_active=0\nWHERE item_id=@itemId
+    activate DB
+    DB --> MDAO : 1 row affected
+    deactivate DB
+    MDAO --> Ctrl : true
+    deactivate MDAO
+
+    Ctrl --> View : true
+    deactivate Ctrl
+    View --> Adm : showConfirmation("Item Archived (Hidden from Customer Menu)")
+    deactivate View
+end
+@enduml
