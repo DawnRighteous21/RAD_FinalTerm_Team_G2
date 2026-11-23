@@ -1,0 +1,110 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 4.3.2 Modified Sequence Diagram (with SQLite) - UC1: Register Customer (Author: 524H0134)
+
+actor "Customer\n(Local / Tourist)" as Cust
+boundary ":RegistrationAddressView" as View
+control ":CustomerRegistrationController" as Ctrl
+entity ":CustomerDAO" as CDAO
+entity "cust:Customer" as DomCust
+entity ":HubDAO" as HDAO
+entity "hub:Hub" as DomHub
+entity "addr:DeliveryAddress" as DomAddr
+entity ":DeliveryAddressDAO" as ADAO
+database ":SQLiteDB" as DB
+
+Cust -> View : submitRegistration(type, name, email, idStr, extra)
+activate View
+View -> Ctrl : registerCustomer(type, name, email, idStr, extra)
+activate Ctrl
+
+Ctrl -> CDAO : existsByPhoneOrPassport(idStr)
+activate CDAO
+CDAO -> DB : SELECT COUNT(*) FROM Customers\nWHERE vn_phone_number=@id OR passport_number=@id
+activate DB
+DB --> CDAO : 0 (unique)
+deactivate DB
+CDAO --> Ctrl : false
+deactivate CDAO
+
+create DomCust
+Ctrl -> DomCust : <<create>>(name, email, idStr, extra)
+activate DomCust
+DomCust -> DomCust : validateCredentials() & activateProfile()
+DomCust --> Ctrl : cust (status="Active")
+deactivate DomCust
+
+Ctrl -> CDAO : insertCustomer(cust)
+activate CDAO
+CDAO -> DB : INSERT INTO Customers\n(customer_id, customer_type, full_name, email, vn_phone_number, passport_number, ...)
+activate DB
+DB --> CDAO : 1 row affected
+deactivate DB
+CDAO --> Ctrl : true
+deactivate CDAO
+
+Ctrl --> View : customerId
+deactivate Ctrl
+View --> Cust : showConfirmation("Account Active: " + customerId)
+deactivate View
+
+Cust -> View : submitAddress(customerId, street, district, landmark)
+activate View
+View -> Ctrl : addDeliveryAddress(customerId, street, district, landmark)
+activate Ctrl
+
+Ctrl -> HDAO : findNearestHub(district)
+activate HDAO
+HDAO -> DB : SELECT * FROM Hubs\nWHERE district=@district AND hub_status != 'Closed' LIMIT 1
+activate DB
+DB --> HDAO : hubRow
+deactivate DB
+HDAO --> Ctrl : hub
+deactivate HDAO
+
+Ctrl -> DomHub : calculateDistanceTo(street, district)
+activate DomHub
+DomHub --> Ctrl : distanceKm
+deactivate DomHub
+
+create DomAddr
+Ctrl -> DomAddr : <<create>>(street, district, landmark, distanceKm)
+activate DomAddr
+DomAddr -> DomAddr : verifyRange(hub.maxDeliveryDistanceKm)
+DomAddr --> Ctrl : isEligible
+deactivate DomAddr
+
+Ctrl -> ADAO : insertAddress(customerId, addr)
+activate ADAO
+ADAO -> DB : INSERT INTO DeliveryAddresses\n(address_id, customer_id, street_address, district, distance_km_from_hub, status)
+activate DB
+DB --> ADAO : 1 row affected
+deactivate DB
+ADAO --> Ctrl : true
+deactivate ADAO
+
+Ctrl --> View : addr
+deactivate Ctrl
+View --> Cust : showConfirmation("Address Saved. Eligible: " + isEligible)
+deactivate View
+
+opt Archive Existing Address (Soft-Delete)
+    Cust -> View : updateOrDeleteAddress(customerId, addressId, "ARCHIVE")
+    activate View
+    View -> Ctrl : updateOrArchiveAddress(customerId, addressId, "ARCHIVE")
+    activate Ctrl
+    Ctrl -> ADAO : archiveAddress(addressId)
+    activate ADAO
+    ADAO -> DB : UPDATE DeliveryAddresses\nSET status='Archived' WHERE address_id=@addressId
+    activate DB
+    DB --> ADAO : 1 row affected
+    deactivate DB
+    ADAO --> Ctrl : true
+    deactivate ADAO
+    Ctrl --> View : true
+    deactivate Ctrl
+    View --> Cust : showConfirmation("Address Book Updated")
+    deactivate View
+end
+@enduml

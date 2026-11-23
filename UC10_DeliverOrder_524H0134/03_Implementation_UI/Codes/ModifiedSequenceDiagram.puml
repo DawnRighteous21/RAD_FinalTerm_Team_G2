@@ -1,0 +1,148 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 4.3.2 Modified Sequence Diagram (with SQLite) - UC4/UC10: Deliver an Order (Author: 524H0134)
+
+actor "Shipper" as Ship
+boundary ":ShipperDeliveryView" as View
+control ":DeliveryFulfilmentController" as Ctrl
+entity ":OrderDAO" as ODAO
+entity "ord:Order" as DomOrd
+entity ":ShipperDAO" as SDAO
+entity "shp:Shipper" as DomShip
+entity ":HubDAO" as HDAO
+entity "hub:Hub" as DomHub
+database ":SQLiteDB" as DB
+
+Ship -> View : acceptTaskClick(shipperId, orderId)
+activate View
+View -> Ctrl : acceptDeliveryTask(shipperId, orderId)
+activate Ctrl
+Ctrl -> ODAO : findById(orderId)
+activate ODAO
+ODAO -> DB : SELECT o.*, a.* FROM Orders o\nJOIN DeliveryAddresses a ON o.address_id = a.address_id\nWHERE o.order_id=@orderId
+activate DB
+DB --> ODAO : orderRow
+deactivate DB
+ODAO --> Ctrl : ord
+deactivate ODAO
+Ctrl -> SDAO : findById(shipperId)
+activate SDAO
+SDAO -> DB : SELECT * FROM Shippers WHERE shipper_id=@shipperId
+activate DB
+DB --> SDAO : shipperRow
+deactivate DB
+SDAO --> Ctrl : shp
+deactivate SDAO
+Ctrl --> View : ord
+deactivate Ctrl
+View --> Ship : displayTaskDetails(ord, deliveryAddress)
+deactivate View
+
+Ship -> View : confirmPickupClick(shipperId, orderId)
+activate View
+View -> Ctrl : confirmOrderPickup(shipperId, orderId)
+activate Ctrl
+Ctrl -> DomOrd : markPickedUp(shipperId)
+activate DomOrd
+DomOrd --> Ctrl : status="PickedUp"
+deactivate DomOrd
+Ctrl -> DomShip : assignToOrder()
+activate DomShip
+DomShip --> Ctrl : availabilityStatus="OnDelivery"
+deactivate DomShip
+Ctrl -> ODAO : updateDeliveryStatus(ord)
+activate ODAO
+ODAO -> DB : UPDATE Orders SET order_status='PickedUp',\nshipper_id=@shipperId WHERE order_id=@orderId
+activate DB
+DB --> ODAO : 1 row affected
+deactivate DB
+ODAO --> Ctrl : true
+deactivate ODAO
+Ctrl -> SDAO : updateShipperStateAndCash(shp)
+activate SDAO
+SDAO -> DB : UPDATE Shippers SET availability_status='OnDelivery'\nWHERE shipper_id=@shipperId
+activate DB
+DB --> SDAO : 1 row affected
+deactivate DB
+SDAO --> Ctrl : true
+deactivate SDAO
+Ctrl --> View : true
+deactivate Ctrl
+View --> Ship : displayPickupConfirmed("PickedUp")
+deactivate View
+
+alt Successful Delivery (with optional COD)
+    Ship -> View : confirmDeliveryClick(shipperId, orderId, codAmount)
+    activate View
+    View -> Ctrl : confirmDeliverySuccess(shipperId, orderId, codAmount)
+    activate Ctrl
+    opt paymentMethod == "COD"
+        Ctrl -> DomOrd : recordCODPayment(codAmount)
+        activate DomOrd
+        DomOrd --> Ctrl : paymentStatus="PaidCOD"
+        deactivate DomOrd
+        Ctrl -> DomShip : addCollectedCash(codAmount)
+        activate DomShip
+        DomShip --> Ctrl : updatedCashOnHand
+        deactivate DomShip
+    end
+    Ctrl -> DomOrd : markDelivered()
+    activate DomOrd
+    DomOrd --> Ctrl : status="Delivered", deliveredAt
+    deactivate DomOrd
+    Ctrl -> DomShip : markAvailable()
+    activate DomShip
+    DomShip --> Ctrl : availabilityStatus="Available"
+    deactivate DomShip
+else Delivery Failure (>= 3 calls & >= 10 mins wait)
+    Ship -> View : reportFailureClick(shipperId, orderId, reason)
+    activate View
+    View -> Ctrl : reportDeliveryFailure(shipperId, orderId, reason)
+    activate Ctrl
+    Ctrl -> DomOrd : markDeliveryFailed(reason)
+    activate DomOrd
+    DomOrd --> Ctrl : status="DeliveryFailed"
+    deactivate DomOrd
+    Ctrl -> DomShip : markAvailable()
+    activate DomShip
+    DomShip --> Ctrl : availabilityStatus="Available"
+    deactivate DomShip
+end
+
+Ctrl -> ODAO : updateDeliveryStatus(ord)
+activate ODAO
+ODAO -> DB : UPDATE Orders SET order_status=@st, payment_status=@ps,\ndelivered_at=@dt, failure_reason=@fr WHERE order_id=@orderId
+activate DB
+DB --> ODAO : 1 row affected
+deactivate DB
+ODAO --> Ctrl : true
+deactivate ODAO
+
+Ctrl -> SDAO : updateShipperStateAndCash(shp)
+activate SDAO
+SDAO -> DB : UPDATE Shippers SET availability_status='Available',\ncash_on_hand=@cash WHERE shipper_id=@shipperId
+activate DB
+DB --> SDAO : 1 row affected
+deactivate DB
+SDAO --> Ctrl : true
+deactivate SDAO
+
+Ctrl -> HDAO : findById(ord.hubId) & updateActiveOrderCount(hubId, count-1)
+activate HDAO
+HDAO -> DomHub : decrementActiveOrders()
+activate DomHub
+DomHub --> HDAO : newCount
+deactivate DomHub
+HDAO -> DB : UPDATE Hubs SET current_active_orders=@newCount\nWHERE hub_id=@hubId
+activate DB
+DB --> HDAO : 1 row affected
+deactivate DB
+HDAO --> Ctrl : true
+deactivate HDAO
+
+Ctrl --> View : ord
+deactivate Ctrl
+View --> Ship : displayTaskCompleted(ord.orderStatus)
+deactivate View
+@enduml
