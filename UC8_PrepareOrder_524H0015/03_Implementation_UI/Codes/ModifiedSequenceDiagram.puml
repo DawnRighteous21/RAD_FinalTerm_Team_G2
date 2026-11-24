@@ -1,0 +1,126 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 4.3.2 Modified Sequence Diagram (with SQLite) - UC3/UC8: Prepare an Order & Mark Ready (Author: 524H0015)
+
+actor "Kitchen Staff" as KS
+boundary ":KitchenDisplayView" as View
+control ":KitchenPrepController" as Ctrl
+entity ":OrderDAO" as ODAO
+entity "ord:Order" as DomOrd
+entity ":HubMenuItemDAO" as HMDAO
+entity "hmi:HubMenuItem" as DomHMI
+control ":ShipperNotificationService" as Notify
+database ":SQLiteDB" as DB
+
+KS -> View : loadQueueClick(hubId)
+activate View
+View -> Ctrl : getConfirmedOrderQueue(hubId)
+activate Ctrl
+Ctrl -> ODAO : findConfirmedByHub(hubId)
+activate ODAO
+ODAO -> DB : SELECT * FROM Orders\nWHERE hub_id=@hubId\nAND order_status IN ('ConfirmedByKitchen','InPreparation')\nORDER BY order_date_time ASC
+activate DB
+DB --> ODAO : orderRows
+deactivate DB
+ODAO --> Ctrl : orderList
+deactivate ODAO
+Ctrl --> View : orderList
+deactivate Ctrl
+View --> KS : renderOrderQueue(orderList)
+deactivate View
+
+KS -> View : selectOrderClick(orderId)
+activate View
+View -> Ctrl : getOrderDetails(orderId)
+activate Ctrl
+Ctrl -> ODAO : findByIdWithItems(orderId)
+activate ODAO
+ODAO -> DB : SELECT o.*, oi.*, m.item_name FROM Orders o\nJOIN OrderItems oi ON o.order_id = oi.order_id\nJOIN MenuItems m ON oi.item_id = m.item_id\nWHERE o.order_id=@orderId
+activate DB
+DB --> ODAO : orderDetailRows
+deactivate DB
+ODAO --> Ctrl : ord
+deactivate ODAO
+Ctrl --> View : ord
+deactivate Ctrl
+View --> KS : renderTicketDetails(ord)
+deactivate View
+
+KS -> View : startPrepClick(orderId, staffId)
+activate View
+View -> Ctrl : startPreparation(orderId, staffId)
+activate Ctrl
+Ctrl -> DomOrd : startPreparation()
+activate DomOrd
+DomOrd --> Ctrl : true (status="InPreparation", prepStartedAt)
+deactivate DomOrd
+Ctrl -> ODAO : updateOrderPrepState(orderId, "InPreparation", prepStartedAt)
+activate ODAO
+ODAO -> DB : UPDATE Orders SET order_status='InPreparation',\nprep_started_at=@prepStartedAt\nWHERE order_id=@orderId
+activate DB
+DB --> ODAO : 1 row affected
+deactivate DB
+ODAO --> Ctrl : true
+deactivate ODAO
+Ctrl --> View : ord (status="InPreparation")
+deactivate Ctrl
+View --> KS : displayStatusUpdated("InPreparation")
+deactivate View
+
+opt Ingredient Depleted Mid-Preparation
+    KS -> View : markItemOutOfStockClick(hubId, itemId)
+    activate View
+    View -> Ctrl : markHubItemUnavailable(hubId, itemId)
+    activate Ctrl
+    Ctrl -> HMDAO : findByHubAndItem(hubId, itemId)
+    activate HMDAO
+    HMDAO -> DB : SELECT * FROM HubMenuItems\nWHERE hub_id=@hubId AND item_id=@itemId
+    activate DB
+    DB --> HMDAO : hubItemRow
+    deactivate DB
+    HMDAO --> Ctrl : hmi
+    deactivate HMDAO
+    Ctrl -> DomHMI : markOutOfStock()
+    activate DomHMI
+    DomHMI --> Ctrl : isAvailableInStock=false
+    deactivate DomHMI
+    Ctrl -> HMDAO : updateStockAvailability(hmi)
+    activate HMDAO
+    HMDAO -> DB : UPDATE HubMenuItems SET is_available_in_stock=0,\nlast_updated=datetime('now')\nWHERE hub_id=@hubId AND item_id=@itemId
+    activate DB
+    DB --> HMDAO : 1 row affected
+    deactivate DB
+    HMDAO --> Ctrl : true
+    deactivate HMDAO
+    Ctrl --> View : true
+    deactivate Ctrl
+    View --> KS : displayStockAlert("Item marked Out-of-Stock at Hub")
+    deactivate View
+end
+
+KS -> View : markReadyClick(orderId, staffId)
+activate View
+View -> Ctrl : markOrderReady(orderId, staffId)
+activate Ctrl
+Ctrl -> DomOrd : markOrderReady()
+activate DomOrd
+DomOrd --> Ctrl : true (status="ReadyForPickup", readyAt)
+deactivate DomOrd
+Ctrl -> ODAO : updateOrderPrepState(orderId, "ReadyForPickup", readyAt)
+activate ODAO
+ODAO -> DB : UPDATE Orders SET order_status='ReadyForPickup',\nready_at=@readyAt WHERE order_id=@orderId
+activate DB
+DB --> ODAO : 1 row affected
+deactivate DB
+ODAO --> Ctrl : true
+deactivate ODAO
+Ctrl -> Notify : broadcastPickupAlert(orderId, hubId)
+activate Notify
+Notify --> Ctrl : ack
+deactivate Notify
+Ctrl --> View : ord (status="ReadyForPickup")
+deactivate Ctrl
+View --> KS : displayStatusUpdated("ReadyForPickup - Shipper Alerted")
+deactivate View
+@enduml

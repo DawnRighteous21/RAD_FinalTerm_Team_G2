@@ -25,8 +25,8 @@ INSERT INTO HubBrands (hub_id, brand_id) VALUES
 
 INSERT INTO MenuItems (item_id, brand_id, item_name, description_en, description_vi, unit_price, category, is_active) VALUES
 ('ITEM-01', 'BR-01', 'Com Tam Suon Bi Cha', 'Broken rice with grilled pork chop and egg meatloaf', 'Com tam suon nuong bi cha trung', 60000, 'Main', 1),
-('ITEM-02', 'BR-02', 'Pho Tai Lan', 'Stir-fried rare beef pho noodle soup', 'Pho bo tai lan truyen thong', 75000, 'Main', 1),
-('ITEM-03', 'BR-01', 'Tra Da Chanh', 'Iced lime tea', 'Tra chanh tuoi mat lanh', 15000, 'Drink', 1);
+('ITEM-02', 'BR-02', 'Pho Tai Nam', 'Stir-fried rare beef pho noodle soup', 'Pho bo tai nam', 75000, 'Main', 1),
+('ITEM-03', 'BR-01', 'Tra Chanh', 'Iced lime tea', 'Tra chanh tuoi mat lanh', 15000, 'Drink', 1);
 
 INSERT INTO HubMenuItems (hub_id, item_id, is_available_in_stock, daily_prep_limit) VALUES
 ('HUB-D1', 'ITEM-01', 1, 80), ('HUB-D1', 'ITEM-02', 1, 60), ('HUB-D1', 'ITEM-03', 1, 100),

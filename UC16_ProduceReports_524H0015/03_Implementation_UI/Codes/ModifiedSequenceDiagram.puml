@@ -1,0 +1,131 @@
+@startuml
+skinparam shadowing false
+autonumber
+title 4.3.2 Modified Sequence Diagram (with SQLite) - UC6/UC16: Produce Management Reports (Author: 524H0015)
+
+actor "Manager" as Mgr
+boundary ":ManagementReportView" as View
+control ":ReportingController" as Ctrl
+entity ":HubDAO" as HDAO
+entity "rpt:ManagementReport" as DomRpt
+entity ":OrderAnalyticsDAO" as OADAO
+entity ":ReportDAO" as RDAO
+database ":SQLiteDB" as DB
+
+Mgr -> View : openDashboardClick()
+activate View
+View -> Ctrl : getFilterOptions()
+activate Ctrl
+Ctrl -> HDAO : findAllHubs()
+activate HDAO
+HDAO -> DB : SELECT * FROM Hubs ORDER BY hub_id ASC
+activate DB
+DB --> HDAO : hubRows
+deactivate DB
+HDAO --> Ctrl : hubList
+deactivate HDAO
+Ctrl --> View : filterMap(reportTypes, hubList)
+deactivate Ctrl
+View --> Mgr : displayFilterOptions(filterMap)
+deactivate View
+
+Mgr -> View : generateReportClick(type, startDate, endDate, hubId, brandId)
+activate View
+View -> Ctrl : generateReport(type, startDate, endDate, hubId, brandId)
+activate Ctrl
+
+create DomRpt
+Ctrl -> DomRpt : <<create>>(type, startDate, endDate)
+activate DomRpt
+DomRpt -> DomRpt : validateDateRange()
+DomRpt --> Ctrl : true (startDate <= endDate)
+deactivate DomRpt
+
+Ctrl -> OADAO : findOrdersByCriteria(startDate, endDate, hubId, brandId)
+activate OADAO
+OADAO -> DB : SELECT DISTINCT o.* FROM Orders o\nJOIN OrderItems oi ON o.order_id = oi.order_id\nJOIN MenuItems m ON oi.item_id = m.item_id\nWHERE date(o.order_date_time) BETWEEN @startDate AND @endDate\nAND (@hubId IS NULL OR o.hub_id=@hubId)\nAND (@brandId IS NULL OR m.brand_id=@brandId)
+activate DB
+DB --> OADAO : orderRows
+deactivate DB
+OADAO --> Ctrl : matchingOrders
+deactivate OADAO
+
+Ctrl -> HDAO : findAllHubs()
+activate HDAO
+HDAO -> DB : SELECT * FROM Hubs ORDER BY hub_id ASC
+activate DB
+DB --> HDAO : hubRows
+deactivate DB
+HDAO --> Ctrl : hubList
+deactivate HDAO
+
+Ctrl -> DomRpt : computeKPIs(matchingOrders, hubList)
+activate DomRpt
+DomRpt --> Ctrl : metricsComputed(totalRevenue, totalOrders, avgDeliveryTimeMins, peakHubUtilizationPct)
+deactivate DomRpt
+
+Ctrl -> RDAO : saveReportSnapshot(rpt)
+activate RDAO
+RDAO -> DB : INSERT INTO ManagementReports\n(report_id, report_type, start_date, end_date, generated_at,\ntotal_revenue, total_orders, avg_delivery_time_mins,\npeak_hub_utilization_pct, status) VALUES (...)
+activate DB
+DB --> RDAO : 1 row affected
+deactivate DB
+RDAO -> DB : INSERT INTO ReportHubs (report_id, hub_id)\nVALUES (@reportId, @hubId)
+activate DB
+DB --> RDAO : rows affected
+deactivate DB
+RDAO --> Ctrl : true
+deactivate RDAO
+
+Ctrl --> View : rpt (status="Generated")
+deactivate Ctrl
+View --> Mgr : renderReportCharts(rpt)
+deactivate View
+
+opt Export PDF/CSV or Archive Report Snapshot
+    Mgr -> View : exportOrArchiveClick(reportId, actionFormat)
+    activate View
+    View -> Ctrl : exportOrArchiveReport(reportId, actionFormat)
+    activate Ctrl
+    Ctrl -> RDAO : findById(reportId)
+    activate RDAO
+    RDAO -> DB : SELECT * FROM ManagementReports\nWHERE report_id=@reportId
+    activate DB
+    DB --> RDAO : reportRow
+    deactivate DB
+    RDAO --> Ctrl : rpt
+    deactivate RDAO
+
+    alt actionFormat == "PDF" or "CSV"
+        Ctrl -> DomRpt : markExported(actionFormat)
+        activate DomRpt
+        DomRpt --> Ctrl : exportFileUrl (status="Exported")
+        deactivate DomRpt
+        Ctrl -> RDAO : updateReportStatus(reportId, "Exported")
+        activate RDAO
+        RDAO -> DB : UPDATE ManagementReports SET status='Exported'\nWHERE report_id=@reportId
+        activate DB
+        DB --> RDAO : 1 row affected
+        deactivate DB
+        RDAO --> Ctrl : true
+        deactivate RDAO
+    else actionFormat == "ARCHIVE"
+        Ctrl -> DomRpt : markArchived()
+        activate DomRpt
+        DomRpt --> Ctrl : status="Archived"
+        deactivate DomRpt
+        Ctrl -> RDAO : updateReportStatus(reportId, "Archived")
+        activate RDAO
+        RDAO -> DB : UPDATE ManagementReports SET status='Archived'\nWHERE report_id=@reportId
+        activate DB
+        DB --> RDAO : 1 row affected
+        deactivate DB
+        RDAO --> Ctrl : true
+        deactivate RDAO
+    end
+    Ctrl --> View : resultStatusOrUrl
+    deactivate Ctrl
+    View --> Mgr : showConfirmation(resultStatusOrUrl)
+    deactivate View
+end
+@enduml
