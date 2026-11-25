@@ -1,0 +1,78 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="SidebarBgBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="SidebarBtnBgBrush" Color="#334155"/>
+    <SolidColorBrush x:Key="PrimaryOrangeBrush" Color="#E65100"/>
+    <SolidColorBrush x:Key="LightOrangeBgBrush" Color="#FFF7ED"/>
+    <SolidColorBrush x:Key="OrangeBorderBrush" Color="#FDBA74"/>
+    <SolidColorBrush x:Key="PageBgBrush" Color="#F8FAFC"/>
+    <SolidColorBrush x:Key="CardBgBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#CBD5E1"/>
+    <SolidColorBrush x:Key="TextDarkBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#64748B"/>
+    <SolidColorBrush x:Key="SuccessGreenBrush" Color="#16A34A"/>
+    <SolidColorBrush x:Key="SuccessGreenBgBrush" Color="#DCFCE7"/>
+    <SolidColorBrush x:Key="DangerRedBrush" Color="#DC2626"/>
+    <SolidColorBrush x:Key="InfoBlueBrush" Color="#2563EB"/>
+
+    <Style x:Key="NavButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource SidebarBtnBgBrush}"/>
+        <Setter Property="Foreground" Value="#E2E8F0"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Height" Value="42"/>
+        <Setter Property="Margin" Value="16,0,16,12"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="14,0">
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource PrimaryOrangeBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="#334155"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="14,8"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

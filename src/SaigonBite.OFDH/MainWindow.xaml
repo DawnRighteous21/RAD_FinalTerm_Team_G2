@@ -1,12 +1,69 @@
 ﻿<Window x:Class="SaigonBite.OFDH.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SaigonBite.OFDH"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="SaigonBite OFDH — Cloud Kitchen Hub Platform"
+        Width="1360" Height="840"
+        MinWidth="1180" MinHeight="720"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource PageBgBrush}"
+        FontFamily="Segoe UI">
 
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{StaticResource SidebarBgBrush}">
+            <StackPanel>
+                <TextBlock Text="SaigonBite OFDH"
+                           Foreground="White"
+                           FontSize="19"
+                           FontWeight="Bold"
+                           Margin="20,22,20,26"/>
+
+                <Button x:Name="BtnUc1" Content="Customer Profile (UC1)" Style="{StaticResource NavButtonStyle}" Click="NavButton_Click"/>
+                <Button x:Name="BtnUc3" Content="Place an Order (UC3)" Style="{StaticResource NavButtonStyle}" Click="NavButton_Click"/>
+                <Button x:Name="BtnUc8" Content="Kitchen Display (UC8)" Style="{StaticResource NavButtonStyle}" Click="NavButton_Click"/>
+                <Button x:Name="BtnUc10" Content="Shipper Delivery (UC10)" Style="{StaticResource NavButtonStyle}" Click="NavButton_Click"/>
+                <Button x:Name="BtnUc14" Content="Brand &amp; Menu (UC14)" Style="{StaticResource NavButtonStyle}" Click="NavButton_Click"/>
+                <Button x:Name="BtnUc16" Content="Reports (UC16)" Style="{StaticResource NavButtonStyle}" Click="NavButton_Click"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="68"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="24,0">
+                <DockPanel LastChildFill="False">
+                    <TextBlock x:Name="TxtHeaderTitle"
+                               DockPanel.Dock="Left"
+                               Text="Place an Order — Checkout"
+                               FontSize="19"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource TextDarkBrush}"
+                               VerticalAlignment="Center"/>
+
+                    <Border DockPanel.Dock="Right"
+                            Background="{StaticResource LightOrangeBgBrush}"
+                            BorderBrush="{StaticResource OrangeBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="16,6"
+                            VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtRoleBadge"
+                                   Text="Role: Customer | CUST-001"
+                                   FontSize="12"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource PrimaryOrangeBrush}"/>
+                    </Border>
+                </DockPanel>
+            </Border>
+
+            <ContentControl x:Name="MainContent" Grid.Row="1" Margin="20"/>
+        </Grid>
     </Grid>
 </Window>

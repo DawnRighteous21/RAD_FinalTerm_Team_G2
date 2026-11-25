@@ -1,12 +1,14 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
+using SaigonBite.OFDH.DataAccess;
 
 namespace SaigonBite.OFDH;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
 public partial class App : Application
 {
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        var db = new DatabaseConnection();
+        db.InitializeSchema();
+    }
 }
