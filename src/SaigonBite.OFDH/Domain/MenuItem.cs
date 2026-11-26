@@ -18,8 +18,12 @@ public class MenuItem
     {
         if (string.IsNullOrWhiteSpace(BrandId))
             throw new ArgumentException("Brand is required.");
-        if (string.IsNullOrWhiteSpace(ItemName))
-            throw new ArgumentException("Item name is required.");
+        if (string.IsNullOrWhiteSpace(ItemName) || !ItemName.Any(char.IsLetter))
+            throw new ArgumentException("Item name is required and must contain letters.");
+        if (string.IsNullOrWhiteSpace(DescriptionEn) || !DescriptionEn.Any(char.IsLetter))
+            throw new ArgumentException("English description is required and must contain letters.");
+        if (string.IsNullOrWhiteSpace(DescriptionVi) || !DescriptionVi.Any(char.IsLetter))
+            throw new ArgumentException("Vietnamese description is required and must contain letters.");
         if (UnitPrice <= 0)
             throw new ArgumentException("Unit price must be greater than 0 VND.");
     }

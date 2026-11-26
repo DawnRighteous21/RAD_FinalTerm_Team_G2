@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using SaigonBite.OFDH.Views.UC14;
 
 namespace SaigonBite.OFDH;
 
@@ -53,7 +54,7 @@ public partial class MainWindow : Window
                 break;
             case "UC14":
                 SetActiveNav(BtnUc14, activeBg, "Brand & Menu Catalog Management", "Role: Admin");
-                MainContent.Content = BuildPlaceholder("UC14 — Ready for BrandMenuAdminView");
+                MainContent.Content = new BrandMenuAdminView();
                 break;
             case "UC16":
                 SetActiveNav(BtnUc16, activeBg, "Management & KPI Reports", "Role: Operations Manager");

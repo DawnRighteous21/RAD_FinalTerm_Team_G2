@@ -1,0 +1,268 @@
+<UserControl x:Class="SaigonBite.OFDH.Views.UC14.BrandMenuAdminView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="Segoe UI"
+             PreviewMouseDown="Root_PreviewMouseDown"
+             PreviewKeyDown="Root_PreviewKeyDown">
+
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="14"/>
+            <RowDefinition Height="215"/>
+            <RowDefinition Height="14"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16,12">
+            <DockPanel LastChildFill="False">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <Border Width="280" Height="36" Background="White" BorderBrush="{StaticResource InputBorderBrush}" BorderThickness="1" CornerRadius="6">
+                        <Grid>
+                            <TextBlock x:Name="TxtSearchPlaceholder"
+                                       Text="Search brand or menu item..."
+                                       Foreground="#94A3B8"
+                                       FontSize="12"
+                                       Margin="10,0"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False"/>
+                            <TextBox x:Name="TxtSearch"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Padding="8,0"
+                                     VerticalContentAlignment="Center"
+                                     TextChanged="Filter_Changed"/>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Text="Filter:" VerticalAlignment="Center" Margin="16,0,8,0"
+                               FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                    <ComboBox x:Name="CmbBrandFilter" Width="220" Height="36"
+                              DisplayMemberPath="Label"
+                              VerticalContentAlignment="Center"
+                              BorderBrush="{StaticResource InputBorderBrush}"
+                              SelectionChanged="Filter_Changed"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                    <Button Content="+ New Brand" Height="36" Margin="0,0,10,0"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Click="BtnNewBrand_Click"/>
+                    <Button Content="+ New Menu Item" Height="36"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Click="BtnNewMenuItem_Click"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Border Grid.Row="2" Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Virtual Brands" FontSize="15" FontWeight="Bold"
+                           Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,10"/>
+
+                <DataGrid x:Name="DgBrands" Grid.Row="1"
+                          AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="None"
+                          UseLayoutRounding="True" Background="White" BorderThickness="0"
+                          RowHeight="40" SelectionMode="Single"
+                          ColumnHeaderStyle="{StaticResource ModernColumnHeaderStyle}"
+                          CellStyle="{StaticResource ModernDataGridCellStyle}"
+                          RowStyle="{StaticResource ModernDataGridRowStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Brand ID" Binding="{Binding BrandId}" Width="90"/>
+                        <DataGridTextColumn Header="Brand Name" Binding="{Binding BrandName}" Width="190"/>
+                        <DataGridTextColumn Header="Cuisine Type" Binding="{Binding CuisineType}" Width="160"/>
+                        <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                        <DataGridTemplateColumn Header="Status" Width="95">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#DCFCE7"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                        <Setter Property="Background" Value="#E2E8F0"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#16A34A"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Foreground" Value="#475569"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Actions" Width="155">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Content="Edit" Tag="{Binding}" Click="BtnEditBrand_Click"
+                                                Style="{StaticResource GridActionButtonStyle}"
+                                                Background="#EFF6FF" Foreground="#2563EB" Margin="0,0,6,0"/>
+                                        <Button Tag="{Binding}" Click="BtnToggleBrandStatus_Click">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource GridActionButtonStyle}">
+                                                    <Setter Property="Content" Value="Archive"/>
+                                                    <Setter Property="Background" Value="#FEE2E2"/>
+                                                    <Setter Property="Foreground" Value="#DC2626"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Content" Value="Reactivate"/>
+                                                            <Setter Property="Background" Value="#DCFCE7"/>
+                                                            <Setter Property="Foreground" Value="#16A34A"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="4" Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="Bilingual Menu Items (EN / VI)"
+                               FontSize="15" FontWeight="Bold"
+                               Foreground="{StaticResource TextDarkBrush}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1"
+                               Text="Note: Archiving executes soft-delete (is_active = 0) to preserve order history"
+                               FontSize="11" FontStyle="Italic"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="16,0,0,0"/>
+                </Grid>
+
+                <DataGrid x:Name="DgMenuItems" Grid.Row="1"
+                          AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="None"
+                          UseLayoutRounding="True" Background="White" BorderThickness="0"
+                          RowHeight="48" SelectionMode="Single"
+                          ColumnHeaderStyle="{StaticResource ModernColumnHeaderStyle}"
+                          CellStyle="{StaticResource ModernDataGridCellStyle}"
+                          RowStyle="{StaticResource ModernDataGridRowStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Item ID" Binding="{Binding ItemId}" Width="80"/>
+                        <DataGridTextColumn Header="Brand" Binding="{Binding BrandId}" Width="75"/>
+                        <DataGridTextColumn Header="Item Name" Binding="{Binding ItemName}" Width="175"/>
+                        <DataGridTemplateColumn Header="EN / VI Description" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DescriptionEn, StringFormat=EN: {0}}" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding DescriptionVi, StringFormat=VI: {0}}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Price (VND)" Binding="{Binding UnitPrice, StringFormat={}{0:N0}}" Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Hubs" Binding="{Binding AssignedHubsText}" Width="170"/>
+                        <DataGridTemplateColumn Header="Status" Width="85">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#DCFCE7"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                        <Setter Property="Background" Value="#E2E8F0"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#16A34A"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Foreground" Value="#475569"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Actions" Width="155">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Content="Edit" Tag="{Binding}" Click="BtnEditMenuItem_Click"
+                                                Style="{StaticResource GridActionButtonStyle}"
+                                                Background="#EFF6FF" Foreground="#2563EB" Margin="0,0,6,0"/>
+                                        <Button Tag="{Binding}" Click="BtnToggleItemStatus_Click">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource GridActionButtonStyle}">
+                                                    <Setter Property="Content" Value="Archive"/>
+                                                    <Setter Property="Background" Value="#FEE2E2"/>
+                                                    <Setter Property="Foreground" Value="#DC2626"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Content" Value="Reactivate"/>
+                                                            <Setter Property="Background" Value="#DCFCE7"/>
+                                                            <Setter Property="Foreground" Value="#16A34A"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <TextBlock x:Name="TxtStatusMessage" Grid.Row="5"
+                   Margin="4,8,4,0" FontSize="12" FontWeight="SemiBold"
+                   Foreground="{StaticResource TextMutedBrush}"
+                   Text="Catalog ready."/>
+    </Grid>
+</UserControl>
