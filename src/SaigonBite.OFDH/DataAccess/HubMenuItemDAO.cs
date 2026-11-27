@@ -1,3 +1,6 @@
+using Microsoft.Data.Sqlite;
+using SaigonBite.OFDH.Domain;
+
 namespace SaigonBite.OFDH.DataAccess;
 
 public class HubMenuItemDAO
@@ -103,5 +106,83 @@ public class HubMenuItemDAO
 
         tx.Commit();
         return true;
+    }
+
+    public List<HubMenuItem> FindByHubWithItemDetails(string hubId)
+    {
+        var items = new List<HubMenuItem>();
+        using var conn = _db.GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT hmi.hub_id, hmi.item_id, m.item_name, m.brand_id,
+                   hmi.is_available_in_stock, hmi.daily_prep_limit, hmi.last_updated
+            FROM HubMenuItems hmi
+            JOIN MenuItems m ON hmi.item_id = m.item_id
+            WHERE hmi.hub_id = @hubId
+              AND m.is_active = 1
+            ORDER BY hmi.item_id ASC;
+            """;
+        cmd.Parameters.AddWithValue("@hubId", hubId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            items.Add(MapHubMenuItem(reader));
+        }
+        return items;
+    }
+
+    public HubMenuItem? FindByHubAndItem(string hubId, string itemId)
+    {
+        using var conn = _db.GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT hmi.hub_id, hmi.item_id, m.item_name, m.brand_id,
+                   hmi.is_available_in_stock, hmi.daily_prep_limit, hmi.last_updated
+            FROM HubMenuItems hmi
+            JOIN MenuItems m ON hmi.item_id = m.item_id
+            WHERE hmi.hub_id = @hubId
+              AND hmi.item_id = @itemId;
+            """;
+        cmd.Parameters.AddWithValue("@hubId", hubId);
+        cmd.Parameters.AddWithValue("@itemId", itemId);
+
+        using var reader = cmd.ExecuteReader();
+        return reader.Read() ? MapHubMenuItem(reader) : null;
+    }
+
+    public bool UpdateStockAvailability(HubMenuItem item)
+    {
+        using var conn = _db.GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE HubMenuItems
+            SET is_available_in_stock = @isAvailable,
+                last_updated = @lastUpdated
+            WHERE hub_id = @hubId
+              AND item_id = @itemId;
+            """;
+        cmd.Parameters.AddWithValue("@isAvailable", item.IsAvailableInStock ? 1 : 0);
+        cmd.Parameters.AddWithValue("@lastUpdated", string.IsNullOrWhiteSpace(item.LastUpdated)
+            ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+            : item.LastUpdated);
+        cmd.Parameters.AddWithValue("@hubId", item.HubId);
+        cmd.Parameters.AddWithValue("@itemId", item.ItemId);
+
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    private static HubMenuItem MapHubMenuItem(SqliteDataReader reader)
+    {
+        return new HubMenuItem
+        {
+            HubId = reader.GetString(0),
+            ItemId = reader.GetString(1),
+            ItemName = reader.GetString(2),
+            BrandId = reader.GetString(3),
+            IsAvailableInStock = reader.GetInt32(4) == 1,
+            DailyPrepLimit = reader.GetInt32(5),
+            LastUpdated = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+        };
     }
 }

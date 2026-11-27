@@ -1,4 +1,3 @@
-<!-- Author: 524H0134 (Ha Du Tuan) -->
 <Window x:Class="SaigonBite.OFDH.Views.UC1.AddressModal"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

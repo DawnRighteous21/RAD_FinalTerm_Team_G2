@@ -1,4 +1,3 @@
-<!-- Author: 524H0134 (Ha Du Tuan) -->
 <UserControl x:Class="SaigonBite.OFDH.Views.UC10.ShipperDeliveryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -78,7 +77,6 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- TOP STRIP: Shipper KPI Strip -->
         <Border Grid.Row="0" Style="{StaticResource CardBorderStyle}" Padding="16,12">
             <DockPanel LastChildFill="False">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
@@ -97,7 +95,6 @@
                               BorderBrush="{StaticResource InputBorderBrush}"
                               SelectionChanged="CmbShipper_SelectionChanged"/>
 
-                    <!-- Status Badge -->
                     <Border x:Name="BadgeShipperStatus"
                             Background="{StaticResource SuccessGreenBgBrush}"
                             CornerRadius="12"
@@ -143,7 +140,6 @@
             </DockPanel>
         </Border>
 
-        <!-- MIDDLE CONTENT: 2 Columns (~46% Left, ~54% Right) -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="46*"/>
@@ -151,7 +147,6 @@
                 <ColumnDefinition Width="54*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- LEFT COLUMN: Card 1 - Assigned & Ready-for-Pickup Orders -->
             <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -246,7 +241,6 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!-- Selected Order Details Box -->
                     <Border Grid.Row="2"
                             Background="{StaticResource PageBgBrush}"
                             BorderBrush="{StaticResource BorderBrush}"
@@ -279,7 +273,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Accept & Pickup Buttons -->
                     <Grid Grid.Row="3">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -304,7 +297,6 @@
                 </Grid>
             </Border>
 
-            <!-- RIGHT COLUMN: Card 2 (Handover & COD) + Card 3 (Failure Guard Rules) -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -312,7 +304,6 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Card 2: Active Delivery Handover & COD Settlement -->
                 <Border Grid.Row="0" Style="{StaticResource CardBorderStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -330,7 +321,6 @@
                                    Foreground="{StaticResource TextDarkBrush}"
                                    Margin="0,0,0,12"/>
 
-                        <!-- Active Order Summary Box -->
                         <Border Grid.Row="1"
                                 Background="{StaticResource PageBgBrush}"
                                 BorderBrush="{StaticResource BorderBrush}"
@@ -378,7 +368,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- COD Input + Button -->
                         <StackPanel Grid.Row="2" Margin="0,0,0,14">
                             <TextBlock Text="Cash Collected (VND)" Style="{StaticResource FieldLabelStyle}"/>
                             <Grid>
@@ -402,7 +391,6 @@
                             </Grid>
                         </StackPanel>
 
-                        <!-- Large Green Delivery Success Button -->
                         <Button x:Name="BtnConfirmDelivery"
                                 Grid.Row="4"
                                 Content="Confirm Delivery Success"
@@ -414,7 +402,6 @@
                     </Grid>
                 </Border>
 
-                <!-- Card 3: Report Delivery Failure (Guard Rules) -->
                 <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}">
                     <StackPanel>
                         <TextBlock Text="3. Report Delivery Failure (Guard Rules)"
@@ -494,7 +481,6 @@
             </Grid>
         </Grid>
 
-        <!-- BOTTOM FEEDBACK TOAST BAR -->
         <Border x:Name="ToastBorder"
                 Grid.Row="4"
                 Background="#EFF6FF"

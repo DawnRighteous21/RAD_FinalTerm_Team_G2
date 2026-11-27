@@ -1,4 +1,3 @@
-// Author: 524H0134 (Ha Du Tuan)
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -352,11 +351,9 @@ public partial class ShipperDeliveryView : UserControl
         var isAssignedToMe = string.Equals(_selectedOrder.ShipperId, _currentShipper.ShipperId, StringComparison.OrdinalIgnoreCase);
         var isUnassigned = string.IsNullOrWhiteSpace(_selectedOrder.ShipperId);
 
-        // Card 1 button rules
         BtnAcceptTask.IsEnabled = isReady && isShipperAvailable && (isUnassigned || isAssignedToMe);
         BtnConfirmPickup.IsEnabled = isReady && (isAssignedToMe || (isUnassigned && isShipperAvailable));
 
-        // Card 2 payment rule banner + COD/Delivery button rules
         var isCodPaid = string.Equals(_selectedOrder.PaymentStatus, "PaidCOD", StringComparison.OrdinalIgnoreCase);
         if (_selectedOrder.IsCodOrder)
         {

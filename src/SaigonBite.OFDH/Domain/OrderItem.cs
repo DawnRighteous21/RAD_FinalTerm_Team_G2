@@ -6,6 +6,8 @@ public class OrderItem
     public string OrderId { get; set; } = string.Empty;
     public string ItemId { get; set; } = string.Empty;
     public string ItemName { get; set; } = string.Empty;
+    public string BrandId { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
     public int Quantity { get; set; }
     public decimal UnitPriceAtOrder { get; set; }
     public decimal LineTotal { get; set; }

@@ -1,4 +1,3 @@
-// Author: 524H0134 (Ha Du Tuan)
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -78,14 +77,12 @@ public partial class RegistrationAddressView : UserControl
         BtnTabTourist.Background = isLocal ? inactiveBg : activeBg;
         BtnTabTourist.Foreground = isLocal ? inactiveFg : Brushes.White;
 
-        // Local fields
         TxtVnPhone.IsEnabled = isLocal;
         CmbWallet.IsEnabled = isLocal;
         PhVnPhone.Visibility = isLocal ? Visibility.Collapsed : Visibility.Visible;
         OverlayWalletDisabled.Visibility = isLocal ? Visibility.Collapsed : Visibility.Visible;
         if (!isLocal) TxtVnPhone.Clear();
 
-        // Tourist fields
         TxtPassport.IsEnabled = !isLocal;
         TxtNationality.IsEnabled = !isLocal;
         TxtHotelName.IsEnabled = !isLocal;

@@ -1,4 +1,3 @@
-// Author: 524H0134 (Ha Du Tuan)
 using Microsoft.Data.Sqlite;
 using SaigonBite.OFDH.Domain;
 
@@ -206,4 +205,4 @@ public class DeliveryAddressDAO
             Status = reader.GetString(8)
         };
     }
-}   
+}

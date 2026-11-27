@@ -1,4 +1,3 @@
-// Author: 524H0134 (Ha Du Tuan)
 namespace SaigonBite.OFDH.Domain;
 
 public class Shipper

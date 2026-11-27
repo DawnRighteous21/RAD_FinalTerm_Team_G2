@@ -42,7 +42,6 @@ public class Hub
         var normalizedTarget = NormalizeDistrict(district);
         var normalizedHub = NormalizeDistrict(District);
 
-        // Deterministic offset (0.0 .. 0.8 km) based on street name so same address always gets same distance
         var streetOffset = string.IsNullOrWhiteSpace(street)
             ? 0.2m
             : Math.Abs(street.Trim().ToLowerInvariant().GetHashCode() % 9) * 0.1m;
@@ -98,6 +97,6 @@ public class Hub
         else
             HubStatus = "Normal";
     }
-    
+
     public string DisplayLabel => $"{HubId} — {HubName}";
 }

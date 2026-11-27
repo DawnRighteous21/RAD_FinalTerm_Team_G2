@@ -4,6 +4,8 @@ public class Order
 {
     public string OrderId { get; set; } = string.Empty;
     public string CustomerId { get; set; } = string.Empty;
+    public string? CustomerName { get; set; }
+    public string? CustomerType { get; set; }
     public string HubId { get; set; } = string.Empty;
     public string AddressId { get; set; } = string.Empty;
     public string? VoucherCode { get; set; }
@@ -27,6 +29,55 @@ public class Order
 
     public bool IsCodOrder => string.Equals(PaymentMethod, "COD", StringComparison.OrdinalIgnoreCase);
     public string PaymentSummaryText => $"{PaymentMethod} ({PaymentStatus})";
+
+    public bool IsCancellationLocked => OrderStatus is
+        "ConfirmedByKitchen" or "InPreparation" or "ReadyForPickup" or "PickedUp" or "Delivered";
+
+    public string ItemsSummary => Items.Count == 0
+        ? "No items loaded"
+        : string.Join(", ", Items.Select(i =>
+            string.IsNullOrWhiteSpace(i.SpecialInstructions)
+                ? $"{i.Quantity}x {i.ItemName}"
+                : $"{i.Quantity}x {i.ItemName} ({i.SpecialInstructions})"));
+
+    public string KitchenTimeSummary
+    {
+        get
+        {
+            var shortOrderTime = ExtractClockTime(OrderDateTime);
+            return OrderStatus switch
+            {
+                "Placed" => $"{shortOrderTime}\n(5m confirm window)",
+                "ConfirmedByKitchen" => $"{shortOrderTime}\n(Confirmed)",
+                "InPreparation" => $"{shortOrderTime}\n(Prep {ExtractClockTime(PrepStartedAt)})",
+                "ReadyForPickup" => $"{shortOrderTime}\n(Ready {ExtractClockTime(ReadyAt)})",
+                _ => shortOrderTime
+            };
+        }
+    }
+
+    public string KitchenActionHint => OrderStatus switch
+    {
+        "Placed" => "[Confirm] [Reject]",
+        "ConfirmedByKitchen" => "[Start Prep]",
+        "InPreparation" => "[Mark Ready]",
+        "ReadyForPickup" => "[Awaiting Shipper]",
+        _ => OrderStatus
+    };
+
+    public string CustomerDisplayText => string.IsNullOrWhiteSpace(CustomerName)
+        ? CustomerId
+        : string.IsNullOrWhiteSpace(CustomerType)
+            ? $"{CustomerId} ({CustomerName})"
+            : $"{CustomerId} ({CustomerName} — {CustomerType})";
+
+    private static string ExtractClockTime(string? timestamp)
+    {
+        if (string.IsNullOrWhiteSpace(timestamp)) return "--:--";
+        return DateTime.TryParse(timestamp, out var parsed)
+            ? parsed.ToString("HH:mm")
+            : timestamp;
+    }
 
     public decimal CalculateDeliveryFee(decimal distanceKm, string hubStatus)
     {
@@ -58,6 +109,7 @@ public class Order
                 OrderId = OrderId,
                 ItemId = menuItem.ItemId,
                 ItemName = menuItem.ItemName,
+                BrandId = menuItem.BrandId,
                 Quantity = quantity,
                 UnitPriceAtOrder = menuItem.UnitPrice,
                 LineTotal = menuItem.UnitPrice * quantity,
@@ -105,7 +157,62 @@ public class Order
         OrderDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
     }
 
-    // === UC10: Deliver an Order (Author: 524H0134 - Ha Du Tuan) ===
+    public void ConfirmByKitchen()
+    {
+        if (!string.Equals(OrderStatus, "Placed", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Order {OrderId} cannot be confirmed because current status is '{OrderStatus}' (requires 'Placed').");
+
+        OrderStatus = "ConfirmedByKitchen";
+        FailureReason = null;
+    }
+
+    public void RejectByKitchen(string reasonCode, string? customDetails)
+    {
+        if (!string.Equals(OrderStatus, "Placed", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Order {OrderId} cannot be rejected because current status is '{OrderStatus}' (requires 'Placed').");
+
+        if (string.IsNullOrWhiteSpace(reasonCode))
+            throw new ArgumentException("A rejection reason code is required.");
+
+        var cleanCode = reasonCode.Trim();
+        var cleanDetails = (customDetails ?? string.Empty).Trim();
+
+        if (string.Equals(cleanCode, "Other", StringComparison.OrdinalIgnoreCase) &&
+            string.IsNullOrWhiteSpace(cleanDetails))
+        {
+            throw new ArgumentException("Detailed explanation is required when rejection reason is 'Other'.");
+        }
+
+        OrderStatus = "Rejected";
+        FailureReason = string.IsNullOrWhiteSpace(cleanDetails)
+            ? cleanCode
+            : $"{cleanCode}: {cleanDetails}";
+
+        if (string.Equals(PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
+            PaymentStatus = "Refunded";
+    }
+
+    public void StartPreparation()
+    {
+        if (!string.Equals(OrderStatus, "ConfirmedByKitchen", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Order {OrderId} cannot start preparation because current status is '{OrderStatus}' (requires 'ConfirmedByKitchen').");
+
+        OrderStatus = "InPreparation";
+        PrepStartedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+    }
+
+    public void MarkOrderReady()
+    {
+        if (!string.Equals(OrderStatus, "InPreparation", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Order {OrderId} cannot be marked ready because current status is '{OrderStatus}' (requires 'InPreparation').");
+
+        OrderStatus = "ReadyForPickup";
+        ReadyAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+    }
 
     public void MarkPickedUp(string shipperId)
     {

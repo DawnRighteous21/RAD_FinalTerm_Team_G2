@@ -1,4 +1,3 @@
-// Author: 524H0134 (Ha Du Tuan)
 using SaigonBite.OFDH.DataAccess;
 using SaigonBite.OFDH.Domain;
 
