@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Media;
 using SaigonBite.OFDH.Views.UC14;
+using SaigonBite.OFDH.Views.UC1;
 
 namespace SaigonBite.OFDH;
 
@@ -38,7 +39,7 @@ public partial class MainWindow : Window
         {
             case "UC1":
                 SetActiveNav(BtnUc1, activeBg, "Customer Registration & Addresses", "Role: Customer (Guest / Tourist)");
-                MainContent.Content = BuildPlaceholder("UC1 — Assigned to Ha Du Tuan (524H0134)");
+                MainContent.Content = new RegistrationAddressView();
                 break;
             case "UC3":
                 SetActiveNav(BtnUc3, activeBg, "Place an Order — Checkout", "Role: Customer | CUST-001");

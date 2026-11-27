@@ -48,6 +48,42 @@ public class HubDAO
         return reader.Read() ? MapHub(reader) : null;
     }
 
+    public Hub? FindNearestHub(string district)
+    {
+        using var conn = _db.GetConnection();
+
+        using (var exactCmd = conn.CreateCommand())
+        {
+            exactCmd.CommandText = """
+                SELECT hub_id, hub_name, district, max_active_orders,
+                       current_active_orders, max_delivery_distance_km, hub_status
+                FROM Hubs
+                WHERE LOWER(district) = LOWER(@district)
+                  AND hub_status != 'Closed'
+                ORDER BY current_active_orders ASC, hub_id ASC
+                LIMIT 1;
+                """;
+            exactCmd.Parameters.AddWithValue("@district", district.Trim());
+
+            using var reader = exactCmd.ExecuteReader();
+            if (reader.Read())
+                return MapHub(reader);
+        }
+
+        using var fallbackCmd = conn.CreateCommand();
+        fallbackCmd.CommandText = """
+            SELECT hub_id, hub_name, district, max_active_orders,
+                   current_active_orders, max_delivery_distance_km, hub_status
+            FROM Hubs
+            WHERE hub_status != 'Closed'
+            ORDER BY current_active_orders ASC, hub_id ASC
+            LIMIT 1;
+            """;
+
+        using var fallbackReader = fallbackCmd.ExecuteReader();
+        return fallbackReader.Read() ? MapHub(fallbackReader) : null;
+    }
+
     private static Hub MapHub(SqliteDataReader reader)
     {
         return new Hub

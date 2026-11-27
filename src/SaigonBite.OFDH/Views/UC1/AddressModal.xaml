@@ -1,0 +1,58 @@
+<!-- Author: 524H0134 (Ha Du Tuan) -->
+<Window x:Class="SaigonBite.OFDH.Views.UC1.AddressModal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Delivery Address"
+        Width="460" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="White"
+        FontFamily="Segoe UI">
+
+    <StackPanel Margin="24">
+        <TextBlock x:Name="TxtModalTitle"
+                   Text="Edit Delivery Address"
+                   FontSize="18" FontWeight="Bold"
+                   Foreground="{StaticResource TextDarkBrush}"
+                   Margin="0,0,0,16"/>
+
+        <TextBlock Text="Recipient Name *" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,4"/>
+        <TextBox x:Name="TxtRecipientName" Height="34" Padding="8,6" BorderBrush="{StaticResource InputBorderBrush}" Margin="0,0,0,12"/>
+
+        <TextBlock Text="District *" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,4"/>
+        <ComboBox x:Name="CmbDistrict" Height="34" VerticalContentAlignment="Center" BorderBrush="{StaticResource InputBorderBrush}" Margin="0,0,0,12">
+            <ComboBoxItem Content="District 1"/>
+            <ComboBoxItem Content="District 3"/>
+            <ComboBoxItem Content="District 7"/>
+            <ComboBoxItem Content="Binh Thanh"/>
+            <ComboBoxItem Content="Phu Nhuan"/>
+            <ComboBoxItem Content="Tan Phu"/>
+            <ComboBoxItem Content="Thu Duc"/>
+            <ComboBoxItem Content="Nha Be"/>
+            <ComboBoxItem Content="Binh Chanh"/>
+            <ComboBoxItem Content="Cu Chi"/>
+        </ComboBox>
+
+        <TextBlock Text="Street Address *" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,4"/>
+        <TextBox x:Name="TxtStreetAddress" Height="34" Padding="8,6" BorderBrush="{StaticResource InputBorderBrush}" Margin="0,0,0,12"/>
+
+        <TextBlock Text="Hotel / Landmark" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,4"/>
+        <TextBox x:Name="TxtLandmark" Height="34" Padding="8,6" BorderBrush="{StaticResource InputBorderBrush}" Margin="0,0,0,12"/>
+
+        <CheckBox x:Name="ChkIsDefault" Content="Set as Default Address" FontSize="12.5" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,12"/>
+
+        <TextBlock x:Name="TxtError"
+                   Foreground="{StaticResource DangerRedBrush}"
+                   FontSize="12" TextWrapping="Wrap"
+                   Visibility="Collapsed" Margin="0,0,0,12"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Content="Cancel" Width="90" Height="36" Margin="0,0,10,0"
+                    Style="{StaticResource CancelButtonStyle}"
+                    Click="BtnCancel_Click"/>
+            <Button Content="Save Changes" Height="36"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Click="BtnSave_Click"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
