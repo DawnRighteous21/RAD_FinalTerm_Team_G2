@@ -1,0 +1,566 @@
+<UserControl x:Class="SaigonBite.OFDH.Views.UC16.ManagementReportView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="Segoe UI"
+             PreviewMouseDown="Root_PreviewMouseDown"
+             PreviewKeyDown="Root_PreviewKeyDown">
+
+    <UserControl.Resources>
+        <Style x:Key="CardBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBgBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16,12"/>
+        </Style>
+
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <Style x:Key="FilterInputStyle" TargetType="TextBox">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="#F8FAFC"/>
+        </Style>
+
+        <Style x:Key="FilterComboStyle" TargetType="ComboBox">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="#F8FAFC"/>
+        </Style>
+
+        <Style x:Key="ReportActionBtnStyle" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#E2E8F0"/>
+                                <Setter Property="Foreground" Value="#94A3B8"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource CardBorderStyle}">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="170"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="155"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Report Type" Style="{StaticResource FieldLabelStyle}"/>
+                        <ComboBox x:Name="CmbReportType" Style="{StaticResource FilterComboStyle}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Start Date" Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox x:Name="TxtStartDate" Style="{StaticResource FilterInputStyle}" Text="2026-11-01"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="End Date" Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox x:Name="TxtEndDate" Style="{StaticResource FilterInputStyle}" Text="2026-11-30"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="6">
+                        <TextBlock Text="Hub Filter" Style="{StaticResource FieldLabelStyle}"/>
+                        <ComboBox x:Name="CmbHubFilter" Style="{StaticResource FilterComboStyle}" DisplayMemberPath="Label"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="8">
+                        <TextBlock Text="Brand Filter" Style="{StaticResource FieldLabelStyle}"/>
+                        <ComboBox x:Name="CmbBrandFilter" Style="{StaticResource FilterComboStyle}" DisplayMemberPath="Label"/>
+                    </StackPanel>
+
+                    <Button x:Name="BtnGenerateReport"
+                            Grid.Column="10"
+                            Content="Generate Report"
+                            Height="34"
+                            VerticalAlignment="Bottom"
+                            Background="{StaticResource PrimaryOrangeBrush}"
+                            Foreground="White"
+                            Style="{StaticResource ReportActionBtnStyle}"
+                            Click="BtnGenerateReport_Click"/>
+                </Grid>
+
+                <TextBlock x:Name="TxtValidationStrip"
+                           Text="Validation OK: Start Date &lt;= End Date (T-24) | Revenue Rule: Strictly Delivered orders minus approved refunds; Cancelled &amp; DeliveryFailed excluded (T-21)."
+                           FontSize="11.5"
+                           FontStyle="Italic"
+                           Foreground="#15803D"
+                           Margin="0,8,0,0"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="#059669" CornerRadius="10,0,0,10"/>
+                    <StackPanel Grid.Column="1" Margin="14,10">
+                        <TextBlock Text="Total Net Revenue" FontSize="12" FontWeight="SemiBold" Foreground="#475569"/>
+                        <TextBlock x:Name="TxtKpiRevenue" Text="0 VND" FontSize="21" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}" Margin="0,3,0,2"/>
+                        <TextBlock x:Name="TxtKpiRevenueSub" Text="0 Delivered | 0 Excluded" FontSize="11" Foreground="#15803D" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="#3B82F6" CornerRadius="10,0,0,10"/>
+                    <StackPanel Grid.Column="1" Margin="14,10">
+                        <TextBlock Text="Total Delivered Orders" FontSize="12" FontWeight="SemiBold" Foreground="#475569"/>
+                        <TextBlock x:Name="TxtKpiOrders" Text="0" FontSize="21" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}" Margin="0,3,0,2"/>
+                        <TextBlock x:Name="TxtKpiOrdersSub" Text="Completion Rate: 100.0%" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="4" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{StaticResource PrimaryOrangeBrush}" CornerRadius="10,0,0,10"/>
+                    <StackPanel Grid.Column="1" Margin="14,10">
+                        <TextBlock Text="Avg Delivery Time" FontSize="12" FontWeight="SemiBold" Foreground="#475569"/>
+                        <TextBlock x:Name="TxtKpiAvgTime" Text="0.0 mins" FontSize="21" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}" Margin="0,3,0,2"/>
+                        <TextBlock x:Name="TxtKpiAvgTimeSub" Text="Target SLA: &lt;= 35 mins" FontSize="11" Foreground="#15803D" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="6" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="#D97706" CornerRadius="10,0,0,10"/>
+                    <StackPanel Grid.Column="1" Margin="14,10">
+                        <TextBlock Text="Peak Hub Utilization" FontSize="12" FontWeight="SemiBold" Foreground="#475569"/>
+                        <TextBlock x:Name="TxtKpiPeakHub" Text="0.0%" FontSize="21" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}" Margin="0,3,0,2"/>
+                        <TextBlock x:Name="TxtKpiPeakHubSub" Text="No hub data" FontSize="11" Foreground="#B45309" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="64*"/>
+                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="36*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock x:Name="TxtBreakdownTitle"
+                                   DockPanel.Dock="Left"
+                                   Text="Report Breakdown — Not Generated"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextDarkBrush}"
+                                   VerticalAlignment="Center"/>
+
+                        <Border x:Name="BadgeBreakdownStatus"
+                                DockPanel.Dock="Right"
+                                Background="#DBEAFE"
+                                CornerRadius="12"
+                                Padding="12,4"
+                                HorizontalAlignment="Right">
+                            <TextBlock x:Name="TxtBreakdownStatus"
+                                       Text="Status: Generated"
+                                       FontSize="11.5"
+                                       FontWeight="SemiBold"
+                                       Foreground="#1D4ED8"/>
+                        </Border>
+                    </DockPanel>
+
+                    <TextBlock Grid.Row="1"
+                               Text="1. Net Sales Revenue by Brand (Delivered Orders Only)"
+                               FontSize="12"
+                               FontWeight="Bold"
+                               Foreground="#334155"
+                               Margin="0,0,0,6"/>
+
+                    <DataGrid x:Name="DgBrandSales"
+                              Grid.Row="2"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="None"
+                              UseLayoutRounding="True"
+                              Background="White"
+                              BorderThickness="0"
+                              RowHeight="36"
+                              SelectionMode="Single"
+                              ColumnHeaderStyle="{StaticResource ModernColumnHeaderStyle}"
+                              CellStyle="{StaticResource ModernDataGridCellStyle}"
+                              RowStyle="{StaticResource ModernDataGridRowStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Brand ID" Binding="{Binding BrandId}" Width="72">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Brand Name" Binding="{Binding BrandName}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Delivered" Binding="{Binding DeliveredCount}" Width="72"/>
+                            <DataGridTemplateColumn Header="Cancelled / Failed" Width="116">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ExcludedDisplay}" FontSize="12">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#BE123C"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ExcludedCount}" Value="0">
+                                                            <Setter Property="Foreground" Value="#64748B"/>
+                                                            <Setter Property="FontWeight" Value="Normal"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Refunds (VND)" Binding="{Binding RefundsDisplay}" Width="98"/>
+                            <DataGridTemplateColumn Header="Net Revenue (VND)" Width="122">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding NetRevenueDisplay}" FontWeight="Bold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTotalRow}" Value="True">
+                                                            <Setter Property="Foreground" Value="#059669"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="3"
+                               Text="2. Hub Workload &amp; Shipper Delivery KPIs (COD Reconciliation)"
+                               FontSize="12"
+                               FontWeight="Bold"
+                               Foreground="#334155"
+                               Margin="0,10,0,6"/>
+
+                    <DataGrid x:Name="DgOperationalKpis"
+                              Grid.Row="4"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="None"
+                              UseLayoutRounding="True"
+                              Background="White"
+                              BorderThickness="0"
+                              RowHeight="36"
+                              SelectionMode="Single"
+                              ColumnHeaderStyle="{StaticResource ModernColumnHeaderStyle}"
+                              CellStyle="{StaticResource ModernDataGridCellStyle}"
+                              RowStyle="{StaticResource ModernDataGridRowStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Entity" Binding="{Binding EntityLabel}" Width="140">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Peak / Completed" Binding="{Binding PeakOrCompletedText}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Reroutes / Failed" Width="156">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding RerouteOrFailedText}" FontSize="11.5" TextTrimming="CharacterEllipsis">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasWarning}" Value="True">
+                                                            <Setter Property="Foreground" Value="#BE123C"/>
+                                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Collected COD" Binding="{Binding CollectedCodText}" Width="118">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="5"
+                               Text="Note: Uncollected Failed COD orders are strictly excluded from Shipper COD totals (fixes T-23)."
+                               FontSize="11"
+                               FontStyle="Italic"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               Margin="0,8,0,0"/>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="14"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Style="{StaticResource CardBorderStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Text="Net Revenue by Brand (VND)"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextDarkBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,8"/>
+
+                        <WrapPanel x:Name="ChartLegendPanel"
+                                   Grid.Row="1"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,6"/>
+
+                        <Border Grid.Row="2"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="0,0,0,1"
+                                Padding="12,4,12,0"
+                                VerticalAlignment="Stretch">
+                            <Grid x:Name="ChartBarsGrid"
+                                  SizeChanged="ChartBarsGrid_SizeChanged"/>
+                        </Border>
+
+                        <TextBlock x:Name="TxtChartCaption"
+                                   Grid.Row="3"
+                                   Text="Excludes 0 VND from 0 Cancelled/Failed orders in selected range."
+                                   FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Margin="0,8,0,0"/>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Report Actions &amp; Audit Metadata"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextDarkBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,8"/>
+
+                        <TextBlock x:Name="TxtReportMeta"
+                                   Text="Report ID: — | Generated At: —"
+                                   FontSize="11.5"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,10"/>
+
+                        <DockPanel Margin="0,0,0,12">
+                            <TextBlock DockPanel.Dock="Left"
+                                       Text="Report Lifecycle State:"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="#334155"
+                                       VerticalAlignment="Center"/>
+
+                            <Border x:Name="BadgeLifecycleStatus"
+                                    DockPanel.Dock="Right"
+                                    Background="#DBEAFE"
+                                    CornerRadius="12"
+                                    Padding="16,5"
+                                    HorizontalAlignment="Right">
+                                <TextBlock x:Name="TxtLifecycleStatus"
+                                           Text="Generated"
+                                           FontSize="12"
+                                           FontWeight="Bold"
+                                           Foreground="#1D4ED8"/>
+                            </Border>
+                        </DockPanel>
+
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button x:Name="BtnExportPdf"
+                                    Grid.Column="0"
+                                    Content="Export PDF"
+                                    Background="{StaticResource PrimaryOrangeBrush}"
+                                    Foreground="White"
+                                    Style="{StaticResource ReportActionBtnStyle}"
+                                    Click="BtnExportPdf_Click"/>
+
+                            <Button x:Name="BtnExportCsv"
+                                    Grid.Column="2"
+                                    Content="Export CSV"
+                                    Background="#1E293B"
+                                    Foreground="White"
+                                    Style="{StaticResource ReportActionBtnStyle}"
+                                    Click="BtnExportCsv_Click"/>
+
+                            <Button x:Name="BtnArchiveReport"
+                                    Grid.Column="4"
+                                    Content="Archive"
+                                    Background="#F1F5F9"
+                                    BorderBrush="{StaticResource InputBorderBrush}"
+                                    BorderThickness="1"
+                                    Foreground="#475569"
+                                    Style="{StaticResource ReportActionBtnStyle}"
+                                    Click="BtnArchiveReport_Click"/>
+                        </Grid>
+
+                        <TextBlock Text="Allowed transitions: Generated -> Exported | Generated -> Archived"
+                                   FontSize="11"
+                                   FontStyle="Italic"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   TextAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <Border x:Name="ToastBorder"
+                Grid.Row="6"
+                Background="#EFF6FF"
+                BorderBrush="#BFDBFE"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14,10">
+            <TextBlock x:Name="TxtToastMessage"
+                       Text="Ready — Choose report criteria and click Generate Report to compute KPIs and save a SQLite snapshot."
+                       FontSize="12"
+                       FontWeight="SemiBold"
+                       Foreground="#2563EB"
+                       TextWrapping="Wrap"/>
+        </Border>
+    </Grid>
+</UserControl>

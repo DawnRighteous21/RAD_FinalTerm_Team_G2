@@ -1,9 +1,11 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using SaigonBite.OFDH.Views.UC14;
 using SaigonBite.OFDH.Views.UC1;
+using SaigonBite.OFDH.Views.UC8;
 using SaigonBite.OFDH.Views.UC10;
+using SaigonBite.OFDH.Views.UC14;
+using SaigonBite.OFDH.Views.UC16;
 
 namespace SaigonBite.OFDH;
 
@@ -47,8 +49,8 @@ public partial class MainWindow : Window
                 MainContent.Content = BuildPlaceholder("UC3 — Ready for OrderCheckoutView");
                 break;
             case "UC8":
-                SetActiveNav(BtnUc8, activeBg, "Kitchen Display — Order Preparation", "Role: Kitchen Staff | HUB-D3");
-                MainContent.Content = BuildPlaceholder("UC8 — Assigned to Ly Tin Hoa (524H0015)");
+                SetActiveNav(BtnUc8, activeBg, "Kitchen Display — Order Preparation Queue", "Role: Kitchen Staff | HUB-D1");
+                MainContent.Content = new KitchenDisplayView();
                 break;
             case "UC10":
                 SetActiveNav(BtnUc10, activeBg, "Shipper Delivery — Order Fulfillment", "Role: Shipper | SHP-01");
@@ -59,8 +61,8 @@ public partial class MainWindow : Window
                 MainContent.Content = new BrandMenuAdminView();
                 break;
             case "UC16":
-                SetActiveNav(BtnUc16, activeBg, "Management & KPI Reports", "Role: Operations Manager");
-                MainContent.Content = BuildPlaceholder("UC16 — Assigned to Ly Tin Hoa (524H0015)");
+                SetActiveNav(BtnUc16, activeBg, "Management Reports & Analytics Dashboard", "Role: Manager | MGR-001");
+                MainContent.Content = new ManagementReportView();
                 break;
         }
     }
