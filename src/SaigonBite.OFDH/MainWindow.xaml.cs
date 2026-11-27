@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using SaigonBite.OFDH.Views.UC14;
 using SaigonBite.OFDH.Views.UC1;
+using SaigonBite.OFDH.Views.UC10;
 
 namespace SaigonBite.OFDH;
 
@@ -51,7 +52,7 @@ public partial class MainWindow : Window
                 break;
             case "UC10":
                 SetActiveNav(BtnUc10, activeBg, "Shipper Delivery — Order Fulfillment", "Role: Shipper | SHP-01");
-                MainContent.Content = BuildPlaceholder("UC10 — Assigned to Ha Du Tuan (524H0134)");
+                MainContent.Content = new ShipperDeliveryView();
                 break;
             case "UC14":
                 SetActiveNav(BtnUc14, activeBg, "Brand & Menu Catalog Management", "Role: Admin");

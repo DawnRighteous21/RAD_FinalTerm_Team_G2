@@ -23,6 +23,10 @@ public class Order
 
     public List<OrderItem> Items { get; set; } = new();
     public Voucher? AppliedVoucher { get; set; }
+    public DeliveryAddress? DeliveryAddress { get; set; }
+
+    public bool IsCodOrder => string.Equals(PaymentMethod, "COD", StringComparison.OrdinalIgnoreCase);
+    public string PaymentSummaryText => $"{PaymentMethod} ({PaymentStatus})";
 
     public decimal CalculateDeliveryFee(decimal distanceKm, string hubStatus)
     {
@@ -99,5 +103,75 @@ public class Order
         OrderStatus = "Placed";
         PaymentStatus = paymentStatus;
         OrderDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+    }
+
+    // === UC10: Deliver an Order (Author: 524H0134 - Ha Du Tuan) ===
+
+    public void MarkPickedUp(string shipperId)
+    {
+        if (!string.Equals(OrderStatus, "ReadyForPickup", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Order {OrderId} cannot be picked up because current status is '{OrderStatus}' (requires 'ReadyForPickup').");
+
+        if (string.IsNullOrWhiteSpace(shipperId))
+            throw new ArgumentException("Shipper ID is required to pick up an order.");
+
+        if (!string.IsNullOrWhiteSpace(ShipperId) &&
+            !string.Equals(ShipperId, shipperId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Order {OrderId} is already assigned to another shipper ({ShipperId}).");
+        }
+
+        ShipperId = shipperId.Trim();
+        OrderStatus = "PickedUp";
+    }
+
+    public bool RecordCODPayment(decimal amount)
+    {
+        if (!IsCodOrder)
+            throw new InvalidOperationException($"Order {OrderId} is prepaid ({PaymentMethod}), not COD.");
+
+        if (!string.Equals(OrderStatus, "PickedUp", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Cannot record COD payment while order status is '{OrderStatus}' (requires 'PickedUp').");
+
+        if (string.Equals(PaymentStatus, "PaidCOD", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException($"COD payment for order {OrderId} has already been confirmed.");
+
+        if (amount != TotalAmount)
+            throw new InvalidOperationException(
+                $"COD mismatch: exact amount required is {TotalAmount:N0} VND, but entered {amount:N0} VND.");
+
+        PaymentStatus = "PaidCOD";
+        return true;
+    }
+
+    public void MarkDelivered()
+    {
+        if (!string.Equals(OrderStatus, "PickedUp", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Order {OrderId} cannot be marked Delivered from status '{OrderStatus}' (requires 'PickedUp').");
+
+        if (IsCodOrder && !string.Equals(PaymentStatus, "PaidCOD", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"COD cash ({TotalAmount:N0} VND) must be collected and confirmed (PaidCOD) before completing delivery.");
+
+        OrderStatus = "Delivered";
+        DeliveredAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        FailureReason = null;
+    }
+
+    public void MarkDeliveryFailed(string reason)
+    {
+        if (!string.Equals(OrderStatus, "PickedUp", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Cannot report delivery failure while order status is '{OrderStatus}' (requires 'PickedUp').");
+
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("A valid failure reason must be provided.");
+
+        OrderStatus = "DeliveryFailed";
+        FailureReason = reason.Trim();
     }
 }

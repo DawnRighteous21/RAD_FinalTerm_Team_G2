@@ -97,4 +97,36 @@ public class HubDAO
             HubStatus = reader.GetString(6)
         };
     }
+    
+    public bool UpdateActiveOrderCount(string hubId, int newCount, string hubStatus)
+    {
+        using var conn = _db.GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE Hubs
+            SET current_active_orders = @count,
+                hub_status = @status
+            WHERE hub_id = @hubId;
+            """;
+        cmd.Parameters.AddWithValue("@count", Math.Max(0, newCount));
+        cmd.Parameters.AddWithValue("@status", hubStatus);
+        cmd.Parameters.AddWithValue("@hubId", hubId);
+
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    public bool UpdateActiveOrderCount(string hubId, int newCount)
+    {
+        using var conn = _db.GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE Hubs
+            SET current_active_orders = @count
+            WHERE hub_id = @hubId;
+            """;
+        cmd.Parameters.AddWithValue("@count", Math.Max(0, newCount));
+        cmd.Parameters.AddWithValue("@hubId", hubId);
+
+        return cmd.ExecuteNonQuery() > 0;
+    }
 }

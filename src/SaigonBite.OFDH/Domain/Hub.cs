@@ -30,6 +30,13 @@ public class Hub
         return CurrentActiveOrders;
     }
 
+    public int DecrementActiveOrders()
+    {
+        CurrentActiveOrders = Math.Max(0, CurrentActiveOrders - 1);
+        RefreshStatus();
+        return CurrentActiveOrders;
+    }
+
     public decimal CalculateDistanceTo(string street, string district)
     {
         var normalizedTarget = NormalizeDistrict(district);
@@ -91,6 +98,6 @@ public class Hub
         else
             HubStatus = "Normal";
     }
-
+    
     public string DisplayLabel => $"{HubId} — {HubName}";
 }
