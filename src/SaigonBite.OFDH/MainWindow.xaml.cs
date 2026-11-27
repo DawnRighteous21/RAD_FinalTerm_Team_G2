@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Media;
 using SaigonBite.OFDH.Views.UC1;
+using SaigonBite.OFDH.Views.UC3;
 using SaigonBite.OFDH.Views.UC8;
 using SaigonBite.OFDH.Views.UC10;
 using SaigonBite.OFDH.Views.UC14;
@@ -45,8 +46,8 @@ public partial class MainWindow : Window
                 MainContent.Content = new RegistrationAddressView();
                 break;
             case "UC3":
-                SetActiveNav(BtnUc3, activeBg, "Place an Order — Checkout", "Role: Customer | CUST-001");
-                MainContent.Content = BuildPlaceholder("UC3 — Ready for OrderCheckoutView");
+                SetActiveNav(BtnUc3, activeBg, "Place an Order — Checkout", "Role: Customer | CUST-001 (Local)");
+                MainContent.Content = new OrderCheckoutView(role => TxtRoleBadge.Text = role);
                 break;
             case "UC8":
                 SetActiveNav(BtnUc8, activeBg, "Kitchen Display — Order Preparation Queue", "Role: Kitchen Staff | HUB-D1");
@@ -73,25 +74,5 @@ public partial class MainWindow : Window
         activeBtn.Foreground = Brushes.White;
         TxtHeaderTitle.Text = title;
         TxtRoleBadge.Text = role;
-    }
-
-    private static UIElement BuildPlaceholder(string message)
-    {
-        return new Border
-        {
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E2E8F0")),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(10),
-            Child = new TextBlock
-            {
-                Text = message,
-                FontSize = 16,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748B")),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            }
-        };
     }
 }

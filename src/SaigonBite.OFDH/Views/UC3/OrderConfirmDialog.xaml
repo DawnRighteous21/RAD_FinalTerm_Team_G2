@@ -1,0 +1,68 @@
+<Window x:Class="SaigonBite.OFDH.Views.UC3.OrderConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Order Confirmation"
+        Width="440" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="White"
+        FontFamily="Segoe UI">
+
+    <StackPanel Margin="28,26">
+        <Border Width="54" Height="54" CornerRadius="27"
+                Background="{StaticResource SuccessGreenBgBrush}"
+                HorizontalAlignment="Center" Margin="0,0,0,14">
+            <TextBlock Text="✓" FontSize="26" FontWeight="Bold"
+                       Foreground="{StaticResource SuccessGreenBrush}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <TextBlock Text="Order Placed Successfully!"
+                   FontSize="20" FontWeight="Bold"
+                   Foreground="{StaticResource SuccessGreenBrush}"
+                   HorizontalAlignment="Center" Margin="0,0,0,4"/>
+
+        <TextBlock Text="Your order has been routed to the hub kitchen."
+                   FontSize="13" Foreground="{StaticResource TextMutedBrush}"
+                   HorizontalAlignment="Center" Margin="0,0,0,18"/>
+
+        <Border Background="{StaticResource PageBgBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="1" CornerRadius="8"
+                Padding="16,14" Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Order ID" FontSize="13" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
+                <TextBlock x:Name="TxtOrderId" Grid.Row="0" Grid.Column="1" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}" HorizontalAlignment="Right" Margin="0,0,0,8"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Assigned Hub" FontSize="13" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
+                <TextBlock x:Name="TxtAssignedHub" Grid.Row="1" Grid.Column="1" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}" HorizontalAlignment="Right" Margin="0,0,0,8"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Payment Status" FontSize="13" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
+                <TextBlock x:Name="TxtPaymentStatus" Grid.Row="2" Grid.Column="1" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}" HorizontalAlignment="Right" Margin="0,0,0,8"/>
+
+                <TextBlock x:Name="LblTxRef" Grid.Row="3" Grid.Column="0" Text="Transaction Ref" FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8" Visibility="Collapsed"/>
+                <TextBlock x:Name="TxtTxRef" Grid.Row="3" Grid.Column="1" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource InfoBlueBrush}" HorizontalAlignment="Right" Margin="0,0,0,8" Visibility="Collapsed"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Total Payable" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}" Margin="0,4,0,0"/>
+                <TextBlock x:Name="TxtTotalPayable" Grid.Row="4" Grid.Column="1" FontSize="15" FontWeight="Bold" Foreground="{StaticResource PrimaryOrangeBrush}" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+            </Grid>
+        </Border>
+
+        <Button Content="Back to Menu" Width="160" Height="40"
+                Style="{StaticResource PrimaryButtonStyle}"
+                HorizontalAlignment="Center"
+                Click="BtnBack_Click"/>
+    </StackPanel>
+</Window>

@@ -12,6 +12,92 @@ public class OrderDAO
         _db = db;
     }
 
+    public string GenerateNextOrderId()
+    {
+        var maxNum = 1000;
+        using var conn = _db.GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT order_id FROM Orders;";
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var id = reader.GetString(0);
+            if (id.StartsWith("ORD-", StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(id[4..], out var num) &&
+                num > maxNum)
+            {
+                maxNum = num;
+            }
+        }
+        return $"ORD-{maxNum + 1:D4}";
+    }
+
+    public bool SaveOrderWithItems(Order order)
+    {
+        using var conn = _db.GetConnection();
+        using var tx = conn.BeginTransaction();
+
+        using (var orderCmd = conn.CreateCommand())
+        {
+            orderCmd.Transaction = tx;
+            orderCmd.CommandText = """
+                INSERT INTO Orders (
+                    order_id, customer_id, hub_id, address_id, voucher_code,
+                    order_date_time, order_status, subtotal_amount, delivery_fee,
+                    discount_amount, total_amount, payment_method, payment_status
+                )
+                VALUES (
+                    @orderId, @customerId, @hubId, @addressId, @voucherCode,
+                    @orderDateTime, @orderStatus, @subtotal, @deliveryFee,
+                    @discount, @total, @paymentMethod, @paymentStatus
+                );
+                """;
+            orderCmd.Parameters.AddWithValue("@orderId", order.OrderId);
+            orderCmd.Parameters.AddWithValue("@customerId", order.CustomerId);
+            orderCmd.Parameters.AddWithValue("@hubId", order.HubId);
+            orderCmd.Parameters.AddWithValue("@addressId", order.AddressId);
+            orderCmd.Parameters.AddWithValue("@voucherCode", (object?)order.VoucherCode ?? DBNull.Value);
+            orderCmd.Parameters.AddWithValue("@orderDateTime", order.OrderDateTime);
+            orderCmd.Parameters.AddWithValue("@orderStatus", order.OrderStatus);
+            orderCmd.Parameters.AddWithValue("@subtotal", order.SubtotalAmount);
+            orderCmd.Parameters.AddWithValue("@deliveryFee", order.DeliveryFee);
+            orderCmd.Parameters.AddWithValue("@discount", order.DiscountAmount);
+            orderCmd.Parameters.AddWithValue("@total", order.TotalAmount);
+            orderCmd.Parameters.AddWithValue("@paymentMethod", order.PaymentMethod);
+            orderCmd.Parameters.AddWithValue("@paymentStatus", order.PaymentStatus);
+            orderCmd.ExecuteNonQuery();
+        }
+
+        foreach (var item in order.Items)
+        {
+            item.OrderId = order.OrderId;
+            using var itemCmd = conn.CreateCommand();
+            itemCmd.Transaction = tx;
+            itemCmd.CommandText = """
+                INSERT INTO OrderItems (
+                    order_item_id, order_id, item_id, quantity,
+                    unit_price_at_order, line_total, special_instructions
+                )
+                VALUES (
+                    @orderItemId, @orderId, @itemId, @quantity,
+                    @unitPrice, @lineTotal, @instructions
+                );
+                """;
+            itemCmd.Parameters.AddWithValue("@orderItemId", item.OrderItemId);
+            itemCmd.Parameters.AddWithValue("@orderId", order.OrderId);
+            itemCmd.Parameters.AddWithValue("@itemId", item.ItemId);
+            itemCmd.Parameters.AddWithValue("@quantity", item.Quantity);
+            itemCmd.Parameters.AddWithValue("@unitPrice", item.UnitPriceAtOrder);
+            itemCmd.Parameters.AddWithValue("@lineTotal", item.LineTotal);
+            itemCmd.Parameters.AddWithValue("@instructions", (object?)item.SpecialInstructions ?? DBNull.Value);
+            itemCmd.ExecuteNonQuery();
+        }
+
+        tx.Commit();
+        return true;
+    }
+
     public Order? FindById(string orderId)
     {
         using var conn = _db.GetConnection();
