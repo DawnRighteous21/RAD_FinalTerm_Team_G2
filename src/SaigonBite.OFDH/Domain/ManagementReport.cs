@@ -4,6 +4,8 @@ namespace SaigonBite.OFDH.Domain;
 
 public class ManagementReport
 {
+    private static readonly string[] AcceptedDateFormats = { "yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy" };
+
     public string ReportId { get; set; } = string.Empty;
     public string ReportType { get; set; } = "SalesByBrand";
     public string StartDate { get; set; } = string.Empty;
@@ -27,11 +29,14 @@ public class ManagementReport
 
     public bool ValidateDateRange()
     {
-        if (!DateTime.TryParseExact(StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var start))
-            throw new ArgumentException("Start date must be in YYYY-MM-DD format.");
+        if (!DateTime.TryParseExact(StartDate, AcceptedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var start))
+            throw new ArgumentException("Start date must be in YYYY-MM-DD or DD/MM/YYYY format.");
 
-        if (!DateTime.TryParseExact(EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var end))
-            throw new ArgumentException("End date must be in YYYY-MM-DD format.");
+        if (!DateTime.TryParseExact(EndDate, AcceptedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var end))
+            throw new ArgumentException("End date must be in YYYY-MM-DD or DD/MM/YYYY format.");
+
+        StartDate = start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        EndDate = end.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         if (start.Date > end.Date)
             throw new ArgumentException($"Invalid date range: Start Date ({StartDate}) cannot be later than End Date ({EndDate}).");
@@ -76,8 +81,8 @@ public class ManagementReport
         var deliveryDurations = new List<double>();
         foreach (var order in deliveredOrders)
         {
-            if (DateTime.TryParse(order.OrderDateTime, out var placedAt) &&
-                DateTime.TryParse(order.DeliveredAt, out var deliveredAt) &&
+            if (DateTime.TryParse(order.OrderDateTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out var placedAt) &&
+                DateTime.TryParse(order.DeliveredAt, CultureInfo.InvariantCulture, DateTimeStyles.None, out var deliveredAt) &&
                 deliveredAt >= placedAt)
             {
                 deliveryDurations.Add((deliveredAt - placedAt).TotalMinutes);
@@ -98,7 +103,9 @@ public class ManagementReport
                 .First();
 
             PeakHubUtilizationPct = busiestHub.GetUtilizationPercentage();
-            PeakHubSummaryText = $"{busiestHub.HubId} Peak: {busiestHub.CurrentActiveOrders}/{busiestHub.MaxActiveOrders} ({busiestHub.HubStatus})";
+            PeakHubSummaryText = string.Create(
+                CultureInfo.InvariantCulture,
+                $"{busiestHub.HubId} Peak: {busiestHub.CurrentActiveOrders}/{busiestHub.MaxActiveOrders} ({busiestHub.HubStatus})");
         }
         else
         {
@@ -110,7 +117,7 @@ public class ManagementReport
         BuildOperationalKpiRows(matchingOrders, scopedHubs, shippers);
 
         if (string.IsNullOrWhiteSpace(GeneratedAt))
-            GeneratedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            GeneratedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
     }
 
     private void BuildBrandSalesRows(List<Order> matchingOrders, List<Brand> scopedBrands, string? brandFilterId)
@@ -219,7 +226,9 @@ public class ManagementReport
             kpiRows.Add(new OperationalKpiRow
             {
                 EntityLabel = $"{hub.HubId} (Workload)",
-                PeakOrCompletedText = $"Active {hub.CurrentActiveOrders}/{hub.MaxActiveOrders} ({hub.HubStatus}) | {hubDelivered} Delivered",
+                PeakOrCompletedText = string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"Active {hub.CurrentActiveOrders}/{hub.MaxActiveOrders} ({hub.HubStatus}) | {hubDelivered} Delivered"),
                 RerouteOrFailedText = isBusy
                     ? "Busy threshold reached (>=15)"
                     : $"{hubRejectedOrCancelled} Cancelled/Rejected",
@@ -251,13 +260,15 @@ public class ManagementReport
             kpiRows.Add(new OperationalKpiRow
             {
                 EntityLabel = $"{shipper.ShipperId} ({shipper.FullName})",
-                PeakOrCompletedText = $"{deliveredCount} Delivered ({rate:0.0}%)",
+                PeakOrCompletedText = string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{deliveredCount} Delivered ({rate:0.0}%)"),
                 RerouteOrFailedText = failedCount == 0
                     ? "0 Failed"
                     : uncollectedFailedCodCount > 0
                         ? $"{failedCount} Failed ({uncollectedFailedCodCount} Uncollected COD excl.)"
                         : $"{failedCount} Failed",
-                CollectedCodText = $"{collectedCod:N0} VND",
+                CollectedCodText = $"{collectedCod.ToString("N0", CultureInfo.InvariantCulture)} VND",
                 HasWarning = failedCount > 0
             });
         }

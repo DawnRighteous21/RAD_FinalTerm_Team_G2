@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace SaigonBite.OFDH.Domain;
 
 public class BrandSalesRow
@@ -11,6 +13,6 @@ public class BrandSalesRow
     public bool IsTotalRow { get; set; }
 
     public string ExcludedDisplay => ExcludedCount == 0 ? "0" : $"{ExcludedCount} (Excl.)";
-    public string RefundsDisplay => $"{RefundsAmount:N0}";
-    public string NetRevenueDisplay => $"{NetRevenue:N0}";
+    public string RefundsDisplay => RefundsAmount.ToString("N0", CultureInfo.InvariantCulture);
+    public string NetRevenueDisplay => NetRevenue.ToString("N0", CultureInfo.InvariantCulture);
 }

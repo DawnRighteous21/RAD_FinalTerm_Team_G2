@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Text;
 using SaigonBite.OFDH.DataAccess;
@@ -59,7 +60,7 @@ public class ReportingController
             ReportType = normalizedType,
             StartDate = (startDate ?? string.Empty).Trim(),
             EndDate = (endDate ?? string.Empty).Trim(),
-            GeneratedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            GeneratedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
             Status = "Generated"
         };
 
@@ -127,7 +128,9 @@ public class ReportingController
     {
         var sb = new StringBuilder();
         sb.AppendLine("ReportId,ReportType,StartDate,EndDate,GeneratedAt,TotalRevenueVND,TotalDeliveredOrders,AvgDeliveryTimeMins,PeakHubUtilizationPct,Status");
-        sb.AppendLine($"{report.ReportId},{report.ReportType},{report.StartDate},{report.EndDate},{report.GeneratedAt},{report.TotalRevenue},{report.TotalOrders},{report.AvgDeliveryTimeMins},{report.PeakHubUtilizationPct},{report.Status}");
+        sb.AppendLine(string.Create(
+            CultureInfo.InvariantCulture,
+            $"{report.ReportId},{report.ReportType},{report.StartDate},{report.EndDate},{report.GeneratedAt},{report.TotalRevenue},{report.TotalOrders},{report.AvgDeliveryTimeMins},{report.PeakHubUtilizationPct},{report.Status}"));
         File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
     }
 
@@ -139,10 +142,10 @@ public class ReportingController
             $"Report ID: {report.ReportId} | Type: {report.ReportType}",
             $"Date Range: {report.StartDate} to {report.EndDate}",
             $"Generated At: {report.GeneratedAt} | Status: {report.Status}",
-            $"Total Net Revenue: {report.TotalRevenue:N0} VND",
-            $"Total Delivered Orders: {report.TotalOrders}",
-            $"Avg Delivery Time: {report.AvgDeliveryTimeMins:0.0} mins",
-            $"Peak Hub Utilization: {report.PeakHubUtilizationPct:0.0}%"
+            string.Create(CultureInfo.InvariantCulture, $"Total Net Revenue: {report.TotalRevenue:N0} VND"),
+            string.Create(CultureInfo.InvariantCulture, $"Total Delivered Orders: {report.TotalOrders}"),
+            string.Create(CultureInfo.InvariantCulture, $"Avg Delivery Time: {report.AvgDeliveryTimeMins:0.0} mins"),
+            string.Create(CultureInfo.InvariantCulture, $"Peak Hub Utilization: {report.PeakHubUtilizationPct:0.0}%")
         };
 
         var contentBuilder = new StringBuilder();
@@ -174,7 +177,7 @@ public class ReportingController
         pdf.AppendLine("3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj");
 
         offsets.Add(pdf.Length);
-        pdf.AppendLine($"4 0 obj << /Length {streamBytes} >> stream");
+        pdf.AppendLine(string.Create(CultureInfo.InvariantCulture, $"4 0 obj << /Length {streamBytes} >> stream"));
         pdf.Append(streamText);
         pdf.AppendLine("endstream endobj");
 
@@ -183,17 +186,17 @@ public class ReportingController
 
         var xrefOffset = pdf.Length;
         pdf.AppendLine("xref");
-        pdf.AppendLine($"0 {offsets.Count + 1}");
+        pdf.AppendLine(string.Create(CultureInfo.InvariantCulture, $"0 {offsets.Count + 1}"));
         pdf.AppendLine("0000000000 65535 f ");
         foreach (var offset in offsets)
         {
-            pdf.AppendLine($"{offset:D10} 00000 n ");
+            pdf.AppendLine(string.Create(CultureInfo.InvariantCulture, $"{offset:D10} 00000 n "));
         }
 
         pdf.AppendLine("trailer");
-        pdf.AppendLine($"<< /Size {offsets.Count + 1} /Root 1 0 R >>");
+        pdf.AppendLine(string.Create(CultureInfo.InvariantCulture, $"<< /Size {offsets.Count + 1} /Root 1 0 R >>"));
         pdf.AppendLine("startxref");
-        pdf.AppendLine(xrefOffset.ToString());
+        pdf.AppendLine(xrefOffset.ToString(CultureInfo.InvariantCulture));
         pdf.AppendLine("%%EOF");
 
         File.WriteAllText(path, pdf.ToString(), Encoding.ASCII);

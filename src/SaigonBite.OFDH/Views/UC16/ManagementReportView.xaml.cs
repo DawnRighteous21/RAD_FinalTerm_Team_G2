@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -78,7 +79,7 @@ public partial class ManagementReportView : UserControl
 
         TxtStartDate.Text = "2026-11-01";
         TxtEndDate.Text = DateTime.Today > new DateTime(2026, 11, 30)
-            ? DateTime.Today.ToString("yyyy-MM-dd")
+            ? DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
             : "2026-11-30";
     }
 
@@ -125,21 +126,21 @@ public partial class ManagementReportView : UserControl
 
     private void RenderReport(ManagementReport report)
     {
-        TxtKpiRevenue.Text = $"{report.TotalRevenue:N0} VND";
+        TxtKpiRevenue.Text = string.Create(CultureInfo.InvariantCulture, $"{report.TotalRevenue:N0} VND");
         TxtKpiRevenueSub.Text = report.TotalRefunds > 0
-            ? $"{report.TotalOrders} Delivered (-{report.TotalRefunds:N0} refund) | {report.ExcludedOrderCount} Excl."
-            : $"{report.TotalOrders} Delivered | {report.ExcludedOrderCount} Cancelled/Failed excl.";
+            ? string.Create(CultureInfo.InvariantCulture, $"{report.TotalOrders} Delivered (-{report.TotalRefunds:N0} refund) | {report.ExcludedOrderCount} Excl.")
+            : string.Create(CultureInfo.InvariantCulture, $"{report.TotalOrders} Delivered | {report.ExcludedOrderCount} Cancelled/Failed excl.");
 
-        TxtKpiOrders.Text = report.TotalOrders.ToString();
-        TxtKpiOrdersSub.Text = $"Completion Rate: {report.CompletionRatePct:0.0}%";
+        TxtKpiOrders.Text = report.TotalOrders.ToString(CultureInfo.InvariantCulture);
+        TxtKpiOrdersSub.Text = string.Create(CultureInfo.InvariantCulture, $"Completion Rate: {report.CompletionRatePct:0.0}%");
 
-        TxtKpiAvgTime.Text = $"{report.AvgDeliveryTimeMins:0.0} mins";
+        TxtKpiAvgTime.Text = string.Create(CultureInfo.InvariantCulture, $"{report.AvgDeliveryTimeMins:0.0} mins");
         TxtKpiAvgTimeSub.Text = report.AvgDeliveryTimeMins <= 35m
             ? "Target SLA: <= 35 mins (On Target)"
             : "Target SLA: <= 35 mins (Above SLA)";
         TxtKpiAvgTimeSub.Foreground = CreateBrush(report.AvgDeliveryTimeMins <= 35m ? "#15803D" : "#DC2626");
 
-        TxtKpiPeakHub.Text = $"{report.PeakHubUtilizationPct:0.#}%";
+        TxtKpiPeakHub.Text = string.Create(CultureInfo.InvariantCulture, $"{report.PeakHubUtilizationPct:0.#}%");
         TxtKpiPeakHubSub.Text = report.PeakHubSummaryText;
 
         TxtBreakdownTitle.Text = $"Report Breakdown — {report.ReportId}";
@@ -219,7 +220,7 @@ public partial class ManagementReportView : UserControl
 
             barStack.Children.Add(new TextBlock
             {
-                Text = $"{row.NetRevenue:N0}",
+                Text = row.NetRevenue.ToString("N0", CultureInfo.InvariantCulture),
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
                 Foreground = CreateBrush("#334155"),
@@ -233,15 +234,16 @@ public partial class ManagementReportView : UserControl
                 Height = barHeight,
                 Background = barColor,
                 CornerRadius = new CornerRadius(10, 10, 0, 0),
-                ToolTip = $"{row.BrandName}: {row.NetRevenue:N0} VND ({row.DeliveredCount} delivered)"
+                ToolTip = string.Create(CultureInfo.InvariantCulture, $"{row.BrandName}: {row.NetRevenue:N0} VND ({row.DeliveredCount} delivered)")
             });
 
             Grid.SetColumn(barStack, i);
             ChartBarsGrid.Children.Add(barStack);
         }
 
-        TxtChartCaption.Text =
-            $"Excludes {report.ExcludedOrderValue:N0} VND from {report.ExcludedOrderCount} Cancelled/Rejected/Failed order(s) in selected range.";
+        TxtChartCaption.Text = string.Create(
+            CultureInfo.InvariantCulture,
+            $"Excludes {report.ExcludedOrderValue:N0} VND from {report.ExcludedOrderCount} Cancelled/Rejected/Failed order(s) in selected range.");
     }
 
     private void UpdateStatusBadgesAndButtons(string status)
